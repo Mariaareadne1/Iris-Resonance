@@ -20,7 +20,6 @@ export interface EnvelopeScale {
 
 /** time constant for setTargetAtTime that reaches −60 dB at `seconds` */
 const tau60 = (seconds: number) => Math.max(0.001, seconds / 6.9);
-const SILENT = 0.0001;
 
 /**
  * One plucked note: a two-operator FM pair (optionally doubled and detuned
@@ -211,7 +210,7 @@ export class SustainVoice {
   readonly startTime: number;
 
   constructor(
-    private ctx: BaseAudioContext,
+    ctx: BaseAudioContext,
     out: AudioNode,
     private preset: SoundPreset,
     initial: SustainState,
