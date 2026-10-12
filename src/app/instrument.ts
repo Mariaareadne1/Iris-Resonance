@@ -67,6 +67,8 @@ export class Instrument {
   private unsubAudio: () => void;
   readonly gestures: GestureEvent[] = [];
   frames = 0;
+  /** smoothed cost of physics + gesture update per frame (ms) */
+  physicsMs = 0;
 
   constructor(host: HTMLElement, private opts: InstrumentOptions) {
     this.audio = new AudioEngine(SOUND_PRESETS.Glass, rootMidiFor(DEFAULT_SETTINGS), mixFor(DEFAULT_SETTINGS));
@@ -136,8 +138,10 @@ export class Instrument {
     const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000));
     this.last = now;
     this.showcase.update(dt);
+    const t0 = performance.now();
     this.membrane.step(dt, this.physics);
     this.controller.update(dt);
+    this.physicsMs += (performance.now() - t0 - this.physicsMs) * 0.05;
     this.stage.render(dt, this.visual);
     this.frames++;
   };

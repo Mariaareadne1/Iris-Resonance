@@ -28,7 +28,7 @@ export interface ClothParams {
 export const DEFAULT_CLOTH_PARAMS: ClothParams = {
   viscosity: 0.05,
   stiffness: 1,
-  iterations: 8,
+  iterations: 6,
   tension: 0.5,
 };
 
@@ -235,23 +235,37 @@ export class ClothSim {
   }
 
   private substep(params: ClothParams) {
+    this.integrate(params.viscosity);
+    this.pullHome(params.tension);
+    this.smoothDisplacement(DISPLACEMENT_SMOOTHING);
+    const iters = Math.max(1, Math.round(params.iterations));
+    for (let it = 0; it < iters; it++) {
+      this.relax(params.stiffness);
+      if (this.grab) this.applyGrab(this.grab);
+    }
+  }
+
+  /** Verlet step; damping is expressed per 60 Hz frame, converted to substep rate. */
+  private integrate(viscosity: number) {
     const p = this.positions;
     const prev = this.prev;
-    const n = this.count;
-
-    // integrate: damping expressed per 60 Hz frame, converted to substep rate
-    const damp = Math.pow(1 - Math.min(Math.max(params.viscosity, 0), 0.9), CLOTH_SUBSTEP * 60);
-    for (let i = 0; i < n * 3; i++) {
+    const damp = Math.pow(1 - Math.min(Math.max(viscosity, 0), 0.9), CLOTH_SUBSTEP * 60);
+    const n = this.count * 3;
+    for (let i = 0; i < n; i++) {
       const cur = p[i];
       const vel = (cur - prev[i]) * damp;
       prev[i] = cur;
       p[i] = cur + vel;
     }
+  }
 
-    // home spring: tension pulls the sheet back toward its resting shape
-    const k = 0.008 + 0.08 * Math.min(Math.max(params.tension, 0), 1);
+  /** Home spring: tension pulls the sheet back toward its resting shape. */
+  private pullHome(tension: number) {
+    const p = this.positions;
     const home = this.home;
     const ew = this.edgeWeight;
+    const k = 0.008 + 0.08 * Math.min(Math.max(tension, 0), 1);
+    const n = this.count;
     for (let i = 0; i < n; i++) {
       const w = Math.min(0.5, k * ew[i]);
       const j = i * 3;
@@ -259,28 +273,24 @@ export class ClothSim {
       p[j + 1] += (home[j + 1] - p[j + 1]) * w;
       p[j + 2] += (home[j + 2] - p[j + 2]) * w;
     }
+  }
 
-    this.smoothDisplacement(DISPLACEMENT_SMOOTHING);
-
-    // constraint relaxation
-    const iters = Math.max(1, Math.round(params.iterations));
-    const stiff = params.stiffness;
+  /** One Gauss-Seidel pass over every distance constraint. */
+  private relax(stiffness: number) {
+    const p = this.positions;
     const cA = this.cA, cB = this.cB, cRest = this.cRest, cMul = this.cMul;
     const nc = cA.length;
-    for (let it = 0; it < iters; it++) {
-      for (let c = 0; c < nc; c++) {
-        const ia = cA[c] * 3, ib = cB[c] * 3;
-        const dx = p[ib] - p[ia];
-        const dy = p[ib + 1] - p[ia + 1];
-        const dz = p[ib + 2] - p[ia + 2];
-        const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (d < 1e-9) continue;
-        const diff = ((d - cRest[c]) / d) * 0.5 * stiff * cMul[c];
-        const ox = dx * diff, oy = dy * diff, oz = dz * diff;
-        p[ia] += ox; p[ia + 1] += oy; p[ia + 2] += oz;
-        p[ib] -= ox; p[ib + 1] -= oy; p[ib + 2] -= oz;
-      }
-      this.applyGrab();
+    for (let c = 0; c < nc; c++) {
+      const ia = cA[c] * 3, ib = cB[c] * 3;
+      const dx = p[ib] - p[ia];
+      const dy = p[ib + 1] - p[ia + 1];
+      const dz = p[ib + 2] - p[ia + 2];
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (d < 1e-9) continue;
+      const diff = ((d - cRest[c]) / d) * 0.5 * stiffness * cMul[c];
+      const ox = dx * diff, oy = dy * diff, oz = dz * diff;
+      p[ia] += ox; p[ia + 1] += oy; p[ia + 2] += oz;
+      p[ib] -= ox; p[ib + 1] -= oy; p[ib + 2] -= oz;
     }
   }
 
@@ -310,16 +320,15 @@ export class ClothSim {
     }
   }
 
-  private applyGrab() {
-    const g = this.grab;
-    if (!g) return;
+  private applyGrab(g: GrabState) {
     const p = this.positions;
+    const t = g.target;
     for (let k = 0; k < g.indices.length; k++) {
       const i = g.indices[k] * 3;
       const w = g.weights[k];
-      p[i] += (g.target[0] + g.offsets[k * 3] - p[i]) * w;
-      p[i + 1] += (g.target[1] + g.offsets[k * 3 + 1] - p[i + 1]) * w;
-      p[i + 2] += (g.target[2] + g.offsets[k * 3 + 2] - p[i + 2]) * w;
+      p[i] += (t[0] + g.offsets[k * 3] - p[i]) * w;
+      p[i + 1] += (t[1] + g.offsets[k * 3 + 1] - p[i + 1]) * w;
+      p[i + 2] += (t[2] + g.offsets[k * 3 + 2] - p[i + 2]) * w;
     }
   }
 
@@ -359,11 +368,10 @@ export class ClothSim {
     for (let k = 0; k < st.length; k++) {
       const c = st[k];
       const ia = this.cA[c], ib = this.cB[c];
-      const d = Math.hypot(
-        p[ib * 3] - p[ia * 3],
-        p[ib * 3 + 1] - p[ia * 3 + 1],
-        p[ib * 3 + 2] - p[ia * 3 + 2],
-      );
+      const dx = p[ib * 3] - p[ia * 3];
+      const dy = p[ib * 3 + 1] - p[ia * 3 + 1];
+      const dz = p[ib * 3 + 2] - p[ia * 3 + 2];
+      const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       const e = d / this.cRest[c] - 1;
       s[ia] += e; s[ib] += e;
       cnt[ia]++; cnt[ib]++;

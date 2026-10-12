@@ -18,8 +18,8 @@ export interface RestPoseSpec {
 export const DEFAULT_POSE: RestPoseSpec = {
   width: 3.6,
   height: 2.3,
-  cols: 73,
-  rows: 47,
+  cols: 61,
+  rows: 39,
 };
 
 /** Grid vertex positions (row-major, row 0 = top edge), xyz interleaved. */

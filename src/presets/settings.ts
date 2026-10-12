@@ -61,7 +61,7 @@ export function membraneParamsFor(s: StudioSettings): MembraneParams {
     cloth: {
       viscosity: 0.05,
       stiffness: 1,
-      iterations: 10,
+      iterations: 6,
       tension: s.tension,
     },
     wave: {
