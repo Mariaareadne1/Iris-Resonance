@@ -61,9 +61,9 @@ export class Showcase {
         const k = ease(clamp01((t - 4.0) / 2.6));
         const toward = d.towardCamera();
         const target: Vec3 = [
-          d.origin[0] + k * (0.55 + toward[0] * 0.5),
-          d.origin[1] + k * (0.42 + toward[1] * 0.5),
-          d.origin[2] + k * (toward[2] * 0.5),
+          d.origin[0] + k * (0.4 + toward[0] * 0.35),
+          d.origin[1] + k * (0.3 + toward[1] * 0.35),
+          d.origin[2] + k * (toward[2] * 0.35),
         ];
         d.controller.drag(target, null, 0.15);
       },

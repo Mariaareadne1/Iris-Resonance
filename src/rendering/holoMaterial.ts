@@ -51,12 +51,12 @@ export function createResonanceMaterial(): ResonanceMaterial {
   const material = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#3b3a5c'),
     metalness: 1.0,
-    roughness: 0.36,
+    roughness: 0.18,
     roughnessMap: makeGrainRoughnessMap(),
     normalMap,
     normalScale: new THREE.Vector2(0.07, 0.07),
     clearcoat: 0.45,
-    clearcoatRoughness: 0.12,
+    clearcoatRoughness: 0.08,
     sheen: 0.5,
     sheenRoughness: 0.5,
     sheenColor: new THREE.Color('#d8ccff'),
@@ -87,7 +87,7 @@ export function createResonanceMaterial(): ResonanceMaterial {
     uTouchUv: { value: new THREE.Vector2(0.5, 0.5) },
     uTouchGlow: { value: 0 },
     uWaveGlow: { value: 1 },
-    uCornerRound: { value: 0.16 },
+    uCornerRound: { value: 0.07 },
     uClothSize: { value: new THREE.Vector2(3.6, 2.3) },
   };
 
@@ -185,7 +185,7 @@ export function createResonanceMaterial(): ResonanceMaterial {
           float glint = smoothstep(1.0 - 0.012 * uSparkle * (1.0 + uEnergy * 2.0), 1.0, gate) * 5.0;
 
           float swell = 1.0 + uAttack * 0.9 + uEnergy * 0.35;
-          float energy = (0.2 + 0.8 * fres) * flake;
+          float energy = (0.09 + 0.91 * fres) * flake;
           totalEmissiveRadiance += rainbow * uHoloIntensity * swell * (energy * 0.5 + glint * fres * 0.5);
 
           // vibration: ripples glow where the membrane is actually moving
@@ -204,7 +204,7 @@ export function createResonanceMaterial(): ResonanceMaterial {
           // touch: a soft halo around the most recent contact
           vec2 td = (vHoloUv - uTouchUv) * vec2(1.55, 1.0);
           float halo = exp(-dot(td, td) * 90.0) * uTouchGlow;
-          totalEmissiveRadiance += mix(uPalB, vec3(1.0), 0.4) * halo * 0.6;
+          totalEmissiveRadiance += mix(uPalB, vec3(1.0), 0.4) * halo * 0.35;
 
           vec3 tinted = diffuseColor.rgb * (0.25 + rainbow * 1.9);
           diffuseColor.rgb = mix(diffuseColor.rgb, tinted, uSpecTint);

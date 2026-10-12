@@ -75,7 +75,7 @@ export class Stage {
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.scene.environmentIntensity = 0.34;
+    this.scene.environmentIntensity = 0.55;
     pmrem.dispose();
 
     // cool rim on one side, pink on the other, soft key from the front

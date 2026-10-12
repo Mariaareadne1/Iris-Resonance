@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // three.js is ~75% of the bundle; one cacheable chunk is fine for a single-page instrument
+    chunkSizeWarningLimit: 1000,
+  },
   server: {
     port: Number(process.env.PORT) || 5310,
   },

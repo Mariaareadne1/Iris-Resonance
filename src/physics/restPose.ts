@@ -41,9 +41,16 @@ export function buildRestPose(spec: RestPoseSpec): Float32Array {
       const twist = -0.3 * sx * (0.3 + v * 0.7);
       // the lower hem lifts a little toward the right, like a sail in air
       const hem = 0.06 * v * v * Math.sin(Math.PI * u);
+      // soft diagonal folds that catch the light in bands, fading toward the
+      // top edge as if the fabric hangs from it
+      const fall = Math.pow(v, 0.8);
+      const folds = fall * (
+        0.1 * Math.sin(Math.PI * 2 * (1.35 * u + 0.55 * v) + 0.6) +
+        0.06 * Math.sin(Math.PI * 2 * (2.3 * u - 0.4 * v) + 1.9)
+      );
       out[k++] = sx * width;
       out[k++] = sy * height + hem;
-      out[k++] = billow + belly + twist;
+      out[k++] = billow + belly + twist + folds;
     }
   }
   return out;
