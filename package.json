@@ -1,0 +1,33 @@
+{
+  "name": "iris-resonance",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Iris: Resonance — a playable holographic membrane. Touch the fabric, make a sound.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 4199",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "to-mp4": "bash scripts/to-mp4.sh"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "node-web-audio-api": "^2.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}
