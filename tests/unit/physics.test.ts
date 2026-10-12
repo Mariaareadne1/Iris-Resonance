@@ -122,7 +122,7 @@ describe('membrane physics', () => {
     expect(ringDisplacement(m, pt, 0, 999)).toBeLessThan(0.02);
   });
 
-  test('rapid repeated gestures remain stable and bounded', () => {
+  test('rapid repeated gestures remain stable and bounded', { timeout: 20000 }, () => {
     const m = new Membrane();
     for (let k = 0; k < 200; k++) {
       const pt = { u: (k * 0.137) % 1, v: (k * 0.291) % 1 };

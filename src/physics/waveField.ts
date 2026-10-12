@@ -72,6 +72,25 @@ export class WaveField {
     }
   }
 
+  /**
+   * Hold the membrane still around (col,row): a finger pressing on the
+   * surface stops it vibrating there. `keep` is the fraction retained.
+   */
+  damp(col: number, row: number, radiusCells: number, keep: number) {
+    const reach = Math.ceil(radiusCells);
+    const r2 = radiusCells * radiusCells;
+    for (let y = Math.max(1, Math.floor(row - reach)); y <= Math.min(this.rows - 2, Math.ceil(row + reach)); y++) {
+      for (let x = Math.max(1, Math.floor(col - reach)); x <= Math.min(this.cols - 2, Math.ceil(col + reach)); x++) {
+        const d2 = (x - col) * (x - col) + (y - row) * (y - row);
+        if (d2 > r2) continue;
+        const k = keep + (1 - keep) * (d2 / r2);
+        const i = y * this.cols + x;
+        this.h[i] *= k;
+        this.hPrev[i] *= k;
+      }
+    }
+  }
+
   step(dt: number, params: WaveParams) {
     if (!Number.isFinite(dt) || dt <= 0) return;
     this.accumulator += Math.min(dt, 0.05);

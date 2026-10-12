@@ -34,7 +34,7 @@ export interface ReleaseInfo {
   point: SurfacePoint;
 }
 
-const GRAB_RADIUS = 0.34;
+const GRAB_RADIUS = 0.38;
 const IDLE_AMPLITUDE = 0.035;
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
@@ -187,9 +187,9 @@ export class Membrane {
     return n > 0 ? sum / n : 0;
   }
 
-  /** Overall motion energy of the sheet, roughly 0 (still) .. 1+ (ringing). */
+  /** Overall motion energy of the sheet: 0 still, ~1 just after a full-strength pluck. */
   energy(): number {
-    return this.wave.energy() * 6;
+    return this.wave.energy() * 100;
   }
 
   reset() {
@@ -208,6 +208,12 @@ export class Membrane {
     this.time += d;
     this.updateHome(params.idle);
     this.cloth.step(d, params.cloth);
+    if (this.grabPoint) {
+      // the held region can't ring; this also keeps sharp pull-creases clean
+      const { col, row } = this.gridOf(this.grabPoint);
+      const cellSize = this.spec.width / (this.cols - 1);
+      this.wave.damp(col, row, (GRAB_RADIUS * 1.3) / cellSize, Math.pow(0.02, d));
+    }
     this.wave.step(d, params.wave);
     this.compose();
   }

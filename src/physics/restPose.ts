@@ -34,11 +34,11 @@ export function buildRestPose(spec: RestPoseSpec): Float32Array {
       const sx = u - 0.5;
       const sy = 0.5 - v;
       // slow S-billow across the width, deeper toward the lower hem
-      const billow = 0.26 * Math.sin(Math.PI * 2 * (u * 0.72 + 0.12)) * (0.55 + 0.45 * v);
+      const billow = 0.38 * Math.sin(Math.PI * 2 * (u * 0.78 + 0.08)) * (0.5 + 0.5 * v);
       // soft belly so the center sits slightly forward
       const belly = 0.16 * Math.cos(Math.PI * sx) * Math.cos(Math.PI * sy * 0.9);
       // twist: right side leans back, left side toward the viewer
-      const twist = -0.22 * sx * (0.4 + v * 0.6);
+      const twist = -0.3 * sx * (0.3 + v * 0.7);
       // the lower hem lifts a little toward the right, like a sail in air
       const hem = 0.06 * v * v * Math.sin(Math.PI * u);
       out[k++] = sx * width;

@@ -44,6 +44,8 @@ export const CLOTH_SUBSTEP = 1 / 120;
 const MAX_SUBSTEPS = 4;
 /** Hard ceiling on how far any vertex may wander from rest (world units). */
 const MAX_DISPLACEMENT = 1.6;
+/** per-substep smoothing of displacement (removes grid-scale buckling) */
+const DISPLACEMENT_SMOOTHING = 0.12;
 
 export class ClothSim {
   readonly count: number;
@@ -66,6 +68,9 @@ export class ClothSim {
   private grab: GrabState | null = null;
   private accumulator = 0;
   private edgeWeight: Float32Array;
+  /** 4-neighbourhood, -1 padded (for displacement smoothing) */
+  private neighbors: Int32Array;
+  private smoothScratch: Float32Array;
 
   constructor(
     readonly cols: number,
@@ -111,6 +116,18 @@ export class ClothSim {
       const ia = a[c] * 3, ib = b[c] * 3;
       this.cRest[c] = Math.hypot(p[ib] - p[ia], p[ib + 1] - p[ia + 1], p[ib + 2] - p[ia + 2]);
     }
+
+    this.neighbors = new Int32Array(this.count * 4).fill(-1);
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const i = idx(x, y) * 4;
+        this.neighbors[i] = x > 0 ? idx(x - 1, y) : -1;
+        this.neighbors[i + 1] = x + 1 < cols ? idx(x + 1, y) : -1;
+        this.neighbors[i + 2] = y > 0 ? idx(x, y - 1) : -1;
+        this.neighbors[i + 3] = y + 1 < rows ? idx(x, y + 1) : -1;
+      }
+    }
+    this.smoothScratch = new Float32Array(this.count * 3);
 
     // the hem is held a little more firmly than the middle, like a frame
     this.edgeWeight = new Float32Array(this.count);
@@ -171,8 +188,11 @@ export class ClothSim {
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (d > radius) continue;
       const t = 1 - d / radius;
+      const s = t * t * (3 - 2 * t);
       indices.push(i);
-      weights.push(t * t * (3 - 2 * t));
+      // peaked falloff: the fingertip holds firmly, the surroundings are
+      // left to the constraints — a smooth tent instead of a rigid disk
+      weights.push(Math.pow(s, 1.6));
       offsets.push(dx, dy, dz);
     }
     if (indices.length === 0) return false;
@@ -229,7 +249,7 @@ export class ClothSim {
     }
 
     // home spring: tension pulls the sheet back toward its resting shape
-    const k = 0.004 + 0.05 * Math.min(Math.max(params.tension, 0), 1);
+    const k = 0.008 + 0.08 * Math.min(Math.max(params.tension, 0), 1);
     const home = this.home;
     const ew = this.edgeWeight;
     for (let i = 0; i < n; i++) {
@@ -239,6 +259,8 @@ export class ClothSim {
       p[j + 1] += (home[j + 1] - p[j + 1]) * w;
       p[j + 2] += (home[j + 2] - p[j + 2]) * w;
     }
+
+    this.smoothDisplacement(DISPLACEMENT_SMOOTHING);
 
     // constraint relaxation
     const iters = Math.max(1, Math.round(params.iterations));
@@ -259,6 +281,32 @@ export class ClothSim {
         p[ib] -= ox; p[ib + 1] -= oy; p[ib + 2] -= oz;
       }
       this.applyGrab();
+    }
+  }
+
+  /**
+   * Laplacian smoothing of displacement-from-home (Iris Cloth smoothed raw
+   * positions, which flattens the sculpted rest shape). Smoothing the
+   * displacement instead removes grid-scale buckling in folds while leaving
+   * the resting shape — and broad, musical motion — untouched.
+   */
+  private smoothDisplacement(k: number) {
+    const p = this.positions, home = this.home, nb = this.neighbors;
+    const d = this.smoothScratch;
+    for (let i = 0; i < this.count * 3; i++) d[i] = p[i] - home[i];
+    for (let i = 0; i < this.count; i++) {
+      let ax = 0, ay = 0, az = 0, cnt = 0;
+      for (let j = 0; j < 4; j++) {
+        const ni = nb[i * 4 + j];
+        if (ni < 0) continue;
+        ax += d[ni * 3]; ay += d[ni * 3 + 1]; az += d[ni * 3 + 2];
+        cnt++;
+      }
+      if (cnt === 0) continue;
+      const inv = 1 / cnt, o = i * 3;
+      p[o] += (ax * inv - d[o]) * k;
+      p[o + 1] += (ay * inv - d[o + 1]) * k;
+      p[o + 2] += (az * inv - d[o + 2]) * k;
     }
   }
 
