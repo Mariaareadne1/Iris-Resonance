@@ -15,6 +15,8 @@ export const MAX_VOICES = 10;
 export const RETRIGGER_GUARD = 0.045;
 const STEAL_FADE = 0.025;
 const DAMP_FADE = 0.12;
+/** seconds for a fading convolver (τ 0.12 s) to fall below −60 dB */
+const PRESET_SETTLE = 0.85;
 
 export interface MixSettings {
   /** 0..1 master volume */
@@ -61,6 +63,9 @@ export class AudioGraph {
   private preset: SoundPreset;
   private mix: MixSettings;
   private disposed = false;
+  private lastSwitch = -Infinity;
+  private pendingPreset: SoundPreset | null = null;
+  private pendingTimer: ReturnType<typeof setTimeout> | null = null;
   /** total pluck voices ever started (for tests / debug) */
   notesPlayed = 0;
 
@@ -187,8 +192,26 @@ export class AudioGraph {
   }
 
   setPreset(preset: SoundPreset) {
+    if (preset === this.preset && this.pendingPreset === null) return;
+    // the idle convolver may still be fading out from the previous switch;
+    // swapping its buffer at audible gain would click, so wait it out
+    const wait = this.lastSwitch + PRESET_SETTLE - this.ctx.currentTime;
+    if (wait > 0) {
+      this.pendingPreset = preset;
+      if (this.pendingTimer === null) {
+        this.pendingTimer = setTimeout(() => {
+          this.pendingTimer = null;
+          const p = this.pendingPreset;
+          this.pendingPreset = null;
+          if (p && !this.disposed) this.setPreset(p);
+        }, wait * 1000 + 20);
+      }
+      return;
+    }
+    this.pendingPreset = null;
     if (preset === this.preset) return;
     this.applyPreset(preset, this.ctx.currentTime, false);
+    this.lastSwitch = this.ctx.currentTime;
   }
 
   setMix(mix: MixSettings) {
@@ -229,6 +252,7 @@ export class AudioGraph {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.pendingTimer !== null) clearTimeout(this.pendingTimer);
     const now = this.ctx.currentTime;
     for (const v of this.voices) v.release(now, 0.02);
     this.sustain?.kill(now);

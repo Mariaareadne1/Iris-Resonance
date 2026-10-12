@@ -63,6 +63,14 @@ export class Membrane {
   private time = 0;
   private grabPoint: SurfacePoint | null = null;
   private grabIndex = -1;
+  private grabLost = false;
+
+  /** True once after the simulation dropped a held grab on its own (guard reset). */
+  consumeGrabLost(): boolean {
+    const lost = this.grabLost;
+    this.grabLost = false;
+    return lost;
+  }
 
   constructor(readonly spec: RestPoseSpec = DEFAULT_POSE) {
     this.cols = spec.cols;
@@ -215,6 +223,14 @@ export class Membrane {
     this.time += d;
     this.updateHome(params.idle);
     this.cloth.step(d, params.cloth);
+    if (this.grabPoint && !this.cloth.isGrabbing) {
+      // the cloth's runaway guard reset the sheet mid-grab: drop the grab
+      // here too, clear the ripples, and let the controller know
+      this.grabPoint = null;
+      this.grabIndex = -1;
+      this.wave.reset();
+      this.grabLost = true;
+    }
     if (this.grabPoint) {
       // the held region can't ring; this also keeps sharp pull-creases clean
       const { col, row } = this.gridOf(this.grabPoint);

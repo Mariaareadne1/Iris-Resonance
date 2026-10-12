@@ -74,7 +74,9 @@ export class Stage {
     this.camera = new THREE.PerspectiveCamera(FOV, width / height, 0.1, 100);
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    const room = new RoomEnvironment();
+    this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+    room.dispose();
     this.scene.environmentIntensity = 0.55;
     pmrem.dispose();
 
@@ -317,6 +319,8 @@ export class Stage {
     this.backdrop.dispose();
     this.scene.environment?.dispose();
     this.renderer.dispose();
+    // free the GL context itself; browsers cap live contexts per page
+    this.renderer.forceContextLoss();
     this.canvas.remove();
   }
 }

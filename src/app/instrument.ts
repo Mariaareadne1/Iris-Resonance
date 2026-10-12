@@ -105,6 +105,7 @@ export class Instrument {
         if (!opts.embed && this.audio.snapshot().status === 'off') void this.audio.enable();
       },
       onInteract: () => {
+        if (this.audio.needsResume) void this.audio.enable();
         if (this.showcase.isRunning) this.stopDemo();
         if (!this.state.interacted) this.patch({ interacted: true });
       },
@@ -112,7 +113,7 @@ export class Instrument {
 
     this.detachKeys = attachKeyboard({
       onNote: (region, strong) => {
-        if (!opts.embed && this.audio.snapshot().status === 'off') void this.audio.enable();
+        if ((!opts.embed && this.audio.snapshot().status === 'off') || this.audio.needsResume) void this.audio.enable();
         if (this.showcase.isRunning) this.stopDemo();
         if (!this.state.interacted) this.patch({ interacted: true });
         this.controller.playRegion(region, strong ? 0.95 : 0.6);
@@ -205,10 +206,10 @@ export class Instrument {
 
   async playDemo() {
     this.pointer.cancel();
-    const s = this.audio.snapshot();
-    if (s.status !== 'unsupported' && s.status !== 'running') await this.audio.enable();
     this.showcase.start();
     this.patch({ demo: true, interacted: true });
+    const s = this.audio.snapshot();
+    if (s.status !== 'unsupported' && s.status !== 'running') await this.audio.enable();
   }
 
   stopDemo() {
@@ -232,7 +233,18 @@ export class Instrument {
   }
 
   async startRecording() {
-    if (this.recorder.isRecording) return;
+    if (this.recorder.isRecording || this.recordingStarting) return;
+    this.recordingStarting = true;
+    try {
+      await this.beginRecording();
+    } finally {
+      this.recordingStarting = false;
+    }
+  }
+
+  private recordingStarting = false;
+
+  private async beginRecording() {
     const a = this.audio.snapshot();
     if (a.status !== 'unsupported' && a.status !== 'running') await this.audio.enable();
     const stream = this.audio.recordStream();

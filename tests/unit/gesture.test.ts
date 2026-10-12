@@ -164,4 +164,19 @@ describe('gesture controller', () => {
     expect(visual.attack).toBeLessThan(0.05);
     expect(visual.pitch).toBeGreaterThan(0.8); // rightmost = highest
   });
+
+  test('if the solver resets mid-stretch, the gesture ends cleanly instead of hanging', () => {
+    const { membrane, sound, ctl, frame } = rig();
+    const pt = { u: 0.5, v: 0.5 };
+    ctl.press(pt, 0.4);
+    const origin = membrane.worldAt(pt);
+    for (let i = 1; i <= 20; i++) { ctl.drag(add(origin, [0.3, 0.2, 0.3], i / 20), pt, 0.1); frame(); }
+    expect(ctl.currentPhase).toBe('stretching');
+    membrane.cloth.positions[0] = Number.NaN; // trip the runaway guard
+    frame();
+    expect(ctl.currentPhase).toBe('idle');
+    expect(sound.ends).toBe(1);
+    expect(membrane.isGrabbing).toBe(false);
+    expect(membrane.positions.every(Number.isFinite)).toBe(true);
+  });
 });

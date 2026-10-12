@@ -273,6 +273,7 @@ export class GestureController {
   /** Per-frame: keep the sustained tone and resonance in step with the physics. */
   update(dt: number) {
     if (Number.isFinite(dt) && dt > 0) this.clock += Math.min(dt, 0.1);
+    if (this.membrane.consumeGrabLost() && this.phase !== 'idle') this.release();
     if (this.phase === 'stretching' || this.phase === 'gliding') {
       this.speed *= Math.exp(-Math.min(dt, 0.1) / 0.25); // a held, still finger calms down
       this.sound.sustainUpdate(this.sustainState());

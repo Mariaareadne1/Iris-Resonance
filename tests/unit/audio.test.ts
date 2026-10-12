@@ -195,4 +195,14 @@ describe('audio synthesis (offline rendering)', () => {
     expect(on).toBeLessThan(0.08);
     expect(rms(mono, 2.6, 3)).toBeLessThan(on * 0.1);
   });
+
+  test('a second preset switch waits for the fading reverb, then applies', async () => {
+    const ctx = new OfflineAudioContext(2, SR, SR) as unknown as BaseAudioContext;
+    const g = new AudioGraph(ctx, SOUND_PRESETS.Glass, 62);
+    g.setPreset(SOUND_PRESETS.Silk);
+    expect(g.currentPreset.name).toBe('Silk');
+    g.setPreset(SOUND_PRESETS.Ether); // within the settle window: deferred
+    expect(g.currentPreset.name).toBe('Silk');
+    g.dispose(); // cancels the pending switch
+  });
 });

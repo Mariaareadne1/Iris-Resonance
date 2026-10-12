@@ -41,7 +41,7 @@ checked below with their evidence. The remaining items are a live deployment
 
 ## Tests executed (latest)
 
-- `npm test`: 43 / 43
+- `npm test`: 45 / 45
 - `npm run test:e2e`: 17 / 17 (dev); `E2E_PROD=1`: 16 passed + 1 dev-only skip
 - `npm run build`: passes
 - Recording decoded with ffmpeg: VP9 + Opus, audio peak −10.9 dBFS
@@ -55,6 +55,8 @@ checked below with their evidence. The remaining items are a live deployment
 - Jagged stretch creases → peaked grab, outward membrane pull, wave damping under the finger, displacement smoothing, checkerboard triangulation, stiffer bends
 - Weave normal map aliased into stripes → removed
 - Resting sheet read as a "card" → soft folds, reflection-led shading
+- Code review (8 medium/low findings, all fixed): resonance pad silenced in hidden tabs, deferred preset crossfade, WebGL context released on dispose, touch resumes a suspended context, guard reset ends the gesture, demo/pointer race, re-entrant recording start, AudioEngine dispose guard
+- Mobile icon buttons lost accessible names → visually-hidden labels
 
 ## Known issues / limitations
 

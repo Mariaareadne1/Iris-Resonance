@@ -6,7 +6,7 @@ decoded media.
 
 ## Unit tests — Vitest (`npm test`)
 
-43 tests in `tests/unit/`, run in Node.
+45 tests in `tests/unit/`, run in Node.
 
 **Physics** (`physics.test.ts`, 11):
 - the rest pose is an equilibrium; a still sheet stays still
@@ -27,16 +27,16 @@ clamps; every continuous control stays in its range (including NaN and ±∞);
 bend is monotonic and capped at 2 semitones; slow drags visit each region
 once; boundary jitter never retriggers; fast jumps land directly.
 
-**Gestures** (`gesture.test.ts`, 9), with a recording sound double: a tap is
+**Gestures** (`gesture.test.ts`, 10), with a recording sound double: a tap is
 exactly one in-scale note and no sustain; stronger taps are louder *and*
 displace more; a slow pull becomes one sustained tone whose bend rises within
 limits with no extra notes; releasing a stretch plays a release note and ends
-the tone; a fast sweep plays strictly rising notes, at most one per region;
+the tone; if the solver's runaway guard resets the sheet mid-stretch the gesture ends cleanly; a fast sweep plays strictly rising notes, at most one per region;
 2 s of frantic jitter on a boundary produces 4 notes or fewer; keyboard regions
 equal the playable notes; resonance follows physical energy and settles; visual
 signals respond and decay.
 
-**Audio** (`audio.test.ts`, 12): the real `AudioGraph` rendered into an
+**Audio** (`audio.test.ts`, 13): the real `AudioGraph` rendered into an
 `OfflineAudioContext` from
 [node-web-audio-api](https://github.com/ircam-ismm/node-web-audio-api) and
 measured. A pluck has real energy, starts from silence and never clips. Four
@@ -46,7 +46,7 @@ their nodes. The three presets differ spectrally. 240 full-velocity notes in
 2 s keep the peak ≤ 0.98, and every voice ends. Same-pitch hits within the
 guard merge. No more than 10 live voices. Mute is silent. The held tone keeps
 its pitch, has no release spike and decays. A stretch bend of +2 shifts the
-detected pitch by 2 semitones. The resonance follows energy and stays quiet.
+detected pitch by 2 semitones. The resonance follows energy and stays quiet. A second preset switch inside the reverb's fade window is deferred rather than clicking.
 
 > node-web-audio-api mis-renders `OscillatorNode.frequency` (and the held
 > tone's gain) when a `setTargetAtTime` is scheduled in the future. Chrome
@@ -85,7 +85,7 @@ reading pixels back from the WebGL frame.
 
 ## Latest results (2026-10-12, Apple M2 Pro, macOS, Chromium headless on Metal)
 
-- `npm test`: **43 / 43 passed**
+- `npm test`: **45 / 45 passed**
 - `npm run test:e2e` (dev): **17 / 17 passed**
 - `E2E_PROD=1 npm run test:e2e` (production bundle): **16 passed, 1 skipped**
   (the Chrome glide test imports source modules, which only the dev server

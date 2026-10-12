@@ -64,13 +64,18 @@ export class CanvasRecorder {
     let mimeType = support.mimeType;
     // without audio, drop the audio codec from the container request
     if (!this.hasAudio) mimeType = mimeType.startsWith('video/webm') ? 'video/webm' : 'video/mp4';
-    this.stream = new MediaStream(tracks);
+    const stream = new MediaStream(tracks);
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 12_000_000, audioBitsPerSecond: 192_000 });
+    } catch (err) {
+      video.getVideoTracks().forEach((t) => t.stop());
+      const reason = err instanceof Error ? err.message : 'MediaRecorder could not start.';
+      return { supported: false, mimeType: null, reason, hasAudio: false };
+    }
+    this.stream = stream;
     this.chunks = [];
-    this.recorder = new MediaRecorder(this.stream, {
-      mimeType,
-      videoBitsPerSecond: 12_000_000,
-      audioBitsPerSecond: 192_000,
-    });
+    this.recorder = recorder;
     this.recorder.ondataavailable = (e) => {
       if (e.data.size > 0) this.chunks.push(e.data);
     };

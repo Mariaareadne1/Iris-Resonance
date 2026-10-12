@@ -40,6 +40,7 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private meterBuf: Float32Array<ArrayBuffer> | null = null;
   private wantRunning = false;
+  private disposed = false;
 
   constructor(
     private preset: SoundPreset,
@@ -97,6 +98,7 @@ export class AudioEngine {
       this.setStatus('unsupported');
       return false;
     }
+    if (this.disposed) return false;
     this.wantRunning = true;
     try {
       if (!this.ctx) {
@@ -126,7 +128,11 @@ export class AudioEngine {
     if (document.visibilityState === 'visible' && this.wantRunning && this.ctx && this.ctx.state !== 'running') {
       this.ctx.resume().then(this.syncState, () => this.syncState());
     }
-    if (document.visibilityState === 'hidden') this.graph?.sustainEnd();
+    if (document.visibilityState === 'hidden') {
+      // the frame loop stops in a hidden tab, so nothing would fade these out
+      this.graph?.sustainEnd();
+      this.graph?.setResonance(0);
+    }
   };
 
   setMuted(muted: boolean) {
@@ -208,11 +214,17 @@ export class AudioEngine {
     return this.recordDest.stream;
   }
 
+  /** Sound was turned on before but the context isn't running (tab switch, iOS interruption, failed resume). */
+  get needsResume(): boolean {
+    return this.wantRunning && (this.status === 'suspended' || this.status === 'error');
+  }
+
   dispose() {
+    this.disposed = true;
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.graph?.dispose();
     this.ctx?.removeEventListener('statechange', this.syncState);
-    void this.ctx?.close();
+    this.ctx?.close().catch(() => { /* already closed */ });
     this.ctx = null;
     this.graph = null;
     this.listeners.clear();
