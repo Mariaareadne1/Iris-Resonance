@@ -56,6 +56,10 @@ export class Membrane {
   /** surface normals of the cloth (before wave displacement) */
   readonly normals: Float32Array;
   private restNormals: Float32Array;
+  /** smoothed cloth surface (before waves) and smoothing scratch buffers */
+  private base: Float32Array;
+  private dispA: Float32Array;
+  private dispB: Float32Array;
   private time = 0;
   private grabPoint: SurfacePoint | null = null;
   private grabIndex = -1;
@@ -69,6 +73,9 @@ export class Membrane {
     this.wave = new WaveField(spec.cols, spec.rows);
     this.positions = new Float32Array(rest);
     this.normals = new Float32Array(this.count * 3);
+    this.base = new Float32Array(rest);
+    this.dispA = new Float32Array(this.count * 3);
+    this.dispB = new Float32Array(this.count * 3);
     this.restNormals = new Float32Array(this.count * 3);
     computeGridNormals(rest, this.cols, this.rows, this.restNormals);
     this.normals.set(this.restNormals);
@@ -245,17 +252,49 @@ export class Membrane {
     }
   }
 
+  /**
+   * Rendered surface = smoothed cloth shape + wave displacement along its
+   * normals. Two Jacobi passes (weight ½) of displacement smoothing cancel
+   * grid-scale zig-zags that the cloth can form in tightly compressed
+   * creases, without touching the simulation itself or broad motion.
+   */
   private compose() {
     const p = this.cloth.positions;
-    computeGridNormals(p, this.cols, this.rows, this.normals);
+    const home = this.cloth.home;
+    const base = this.base;
+    const d = this.dispA, tmp = this.dispB;
+    for (let i = 0; i < this.count * 3; i++) d[i] = p[i] - home[i];
+    this.jacobiSmooth(d, tmp);
+    this.jacobiSmooth(tmp, d);
+    for (let i = 0; i < this.count * 3; i++) base[i] = home[i] + d[i];
+    computeGridNormals(base, this.cols, this.rows, this.normals);
     const n = this.normals;
     const h = this.wave.h;
     const out = this.positions;
     for (let i = 0; i < this.count; i++) {
       const j = i * 3;
-      out[j] = p[j] + n[j] * h[i];
-      out[j + 1] = p[j + 1] + n[j + 1] * h[i];
-      out[j + 2] = p[j + 2] + n[j + 2] * h[i];
+      out[j] = base[j] + n[j] * h[i];
+      out[j + 1] = base[j + 1] + n[j + 1] * h[i];
+      out[j + 2] = base[j + 2] + n[j + 2] * h[i];
+    }
+  }
+
+  /** out = ½·src + ½·(4-neighbour mean of src) */
+  private jacobiSmooth(src: Float32Array, out: Float32Array) {
+    const { cols, rows } = this;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        let ax = 0, ay = 0, az = 0, cnt = 0;
+        if (c > 0) { const k = (i - 1) * 3; ax += src[k]; ay += src[k + 1]; az += src[k + 2]; cnt++; }
+        if (c < cols - 1) { const k = (i + 1) * 3; ax += src[k]; ay += src[k + 1]; az += src[k + 2]; cnt++; }
+        if (r > 0) { const k = (i - cols) * 3; ax += src[k]; ay += src[k + 1]; az += src[k + 2]; cnt++; }
+        if (r < rows - 1) { const k = (i + cols) * 3; ax += src[k]; ay += src[k + 1]; az += src[k + 2]; cnt++; }
+        const o = i * 3, inv = 1 / cnt;
+        out[o] = 0.5 * src[o] + 0.5 * ax * inv;
+        out[o + 1] = 0.5 * src[o + 1] + 0.5 * ay * inv;
+        out[o + 2] = 0.5 * src[o + 2] + 0.5 * az * inv;
+      }
     }
   }
 }

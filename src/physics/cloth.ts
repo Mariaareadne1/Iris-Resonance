@@ -45,7 +45,9 @@ const MAX_SUBSTEPS = 4;
 /** Hard ceiling on how far any vertex may wander from rest (world units). */
 const MAX_DISPLACEMENT = 1.6;
 /** per-substep smoothing of displacement (removes grid-scale buckling) */
-const DISPLACEMENT_SMOOTHING = 0.12;
+const DISPLACEMENT_SMOOTHING = 0.22;
+/** bend-constraint strength: higher than Iris Cloth's 0.35 so creases stay rounder than a grid cell */
+const BEND = 0.8;
 
 export class ClothSim {
   readonly count: number;
@@ -88,7 +90,7 @@ export class ClothSim {
     this.strain = new Float32Array(this.count);
     this.strainCount = new Float32Array(this.count);
 
-    // structural (1.0), shear (0.85), bend (0.35) — same weights as Iris Cloth
+    // structural (1.0) and shear (0.85) as in Iris Cloth; bend is stiffer (BEND)
     const a: number[] = [];
     const b: number[] = [];
     const mul: number[] = [];
@@ -102,8 +104,8 @@ export class ClothSim {
           a.push(idx(x, y)); b.push(idx(x + 1, y + 1)); mul.push(0.85);
           a.push(idx(x + 1, y)); b.push(idx(x, y + 1)); mul.push(0.85);
         }
-        if (x + 2 < cols) { a.push(idx(x, y)); b.push(idx(x + 2, y)); mul.push(0.35); }
-        if (y + 2 < rows) { a.push(idx(x, y)); b.push(idx(x, y + 2)); mul.push(0.35); }
+        if (x + 2 < cols) { a.push(idx(x, y)); b.push(idx(x + 2, y)); mul.push(BEND); }
+        if (y + 2 < rows) { a.push(idx(x, y)); b.push(idx(x, y + 2)); mul.push(BEND); }
       }
     }
     this.cA = new Int32Array(a);

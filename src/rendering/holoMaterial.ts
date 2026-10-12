@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeGrainRoughnessMap, makeWeaveNormalMap } from './textures.ts';
+import { makeGrainRoughnessMap } from './textures.ts';
 
 /**
  * Holographic membrane material.
@@ -46,15 +46,12 @@ export interface ResonanceMaterial {
 }
 
 export function createResonanceMaterial(): ResonanceMaterial {
-  const normalMap = makeWeaveNormalMap();
-  normalMap.repeat.set(6, 4);
   const material = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#3b3a5c'),
     metalness: 1.0,
     roughness: 0.18,
+    // no weave normal map: at this scale it only aliased into stripes
     roughnessMap: makeGrainRoughnessMap(),
-    normalMap,
-    normalScale: new THREE.Vector2(0.07, 0.07),
     clearcoat: 0.45,
     clearcoatRoughness: 0.08,
     sheen: 0.5,

@@ -95,7 +95,6 @@ export class Stage {
     this.uniforms = holo.uniforms;
     this.uniforms.uClothSize.value.set(membrane.spec.width, membrane.spec.height);
     const aniso = this.renderer.capabilities.getMaxAnisotropy();
-    if (this.material.normalMap) this.material.normalMap.anisotropy = aniso;
     if (this.material.roughnessMap) this.material.roughnessMap.anisotropy = aniso;
 
     this.geometry = buildGridGeometry(membrane, membrane.positions);
@@ -124,7 +123,7 @@ export class Stage {
     this.composer = new EffectComposer(this.renderer, rt);
     this.composer.setPixelRatio(this.pixelRatio);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.32, 0.75, 0.82);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.24, 0.75, 0.9);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.grain = new ShaderPass(GrainShader);
@@ -231,7 +230,7 @@ export class Stage {
     u.uTouchGlow.value = visual.touchGlow;
     this.backdrop.update(this.time, visual.energy, visual.pitch);
     this.grain.uniforms.uTime.value = this.time % 61.7;
-    this.bloom.strength = 0.3 + visual.attack * 0.18 + visual.energy * 0.12;
+    this.bloom.strength = 0.22 + visual.attack * 0.16 + visual.energy * 0.1;
 
     // gentle parallax toward the pointer
     const k = 1 - Math.exp(-dt / 0.6);
@@ -313,7 +312,6 @@ export class Stage {
     this.geometry.dispose();
     this.restMesh.geometry.dispose();
     (this.restMesh.material as THREE.Material).dispose();
-    this.material.normalMap?.dispose();
     this.material.roughnessMap?.dispose();
     this.material.dispose();
     this.backdrop.dispose();
@@ -323,7 +321,7 @@ export class Stage {
   }
 }
 
-/** Indexed triangle grid sharing `positions` (row 0 = top), uv.y = 1 at top. */
+/** Indexed, checkerboard-triangulated grid sharing `positions` (row 0 = top), uv.y = 1 at top. */
 function buildGridGeometry(m: Membrane, positions: Float32Array): THREE.BufferGeometry {
   const { cols, rows } = m;
   const uvs = new Float32Array(cols * rows * 2);
@@ -338,7 +336,10 @@ function buildGridGeometry(m: Membrane, positions: Float32Array): THREE.BufferGe
   for (let r = 0; r < rows - 1; r++) {
     for (let c = 0; c < cols - 1; c++) {
       const a = r * cols + c, b = a + 1, d = a + cols, e = d + 1;
-      index.push(a, d, b, b, d, e);
+      // alternate the diagonal per cell so creases in any direction stay
+      // smooth instead of stair-stepping along one triangle orientation
+      if ((r + c) % 2 === 0) index.push(a, d, b, b, d, e);
+      else index.push(a, d, e, a, e, b);
     }
   }
   const geo = new THREE.BufferGeometry();

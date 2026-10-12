@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "to-mp4": "bash scripts/to-mp4.sh"
+    "to-mp4": "bash scripts/to-mp4.sh",
+    "samples": "node scripts/render-samples.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",
