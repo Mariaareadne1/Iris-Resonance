@@ -9,5 +9,7 @@ export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts'],
     environment: 'node',
+    // physics/audio tests simulate seconds of real time; allow for busy CI machines
+    testTimeout: 60_000,
   },
 } as Parameters<typeof defineConfig>[0]);
