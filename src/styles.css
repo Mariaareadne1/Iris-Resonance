@@ -418,9 +418,17 @@ kbd {
 
 @media (max-width: 720px) {
   .dock { flex-wrap: wrap; justify-content: center; border-radius: 22px; width: max-content; }
-  .pill span { display: none; }
+  /* icon-only on phones, but labels stay in the accessibility tree */
+  .pill span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   .pill { padding: 0; width: 34px; justify-content: center; }
-  .pill.sound span { display: inline; }
+  .pill.sound span { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
   .pill.sound { width: auto; padding: 0 12px; }
   .hint { bottom: calc(var(--gutter) + 110px); }
   .studio { top: auto; height: 62vh; bottom: calc(var(--gutter) + 104px); }

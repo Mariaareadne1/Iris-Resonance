@@ -169,6 +169,10 @@ test.describe('touch', () => {
     const dock = await page.getByRole('navigation', { name: 'Instrument controls' }).boundingBox();
     expect(dock!.x).toBeGreaterThanOrEqual(0);
     expect(dock!.x + dock!.width).toBeLessThanOrEqual(390);
+    // icon-only buttons on phones still have accessible names
+    for (const name of ['Play demo', 'Capture', 'Reset fabric', 'Customize']) {
+      await expect(page.getByRole('button', { name })).toBeVisible();
+    }
   });
 });
 
