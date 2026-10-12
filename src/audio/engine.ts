@@ -37,6 +37,8 @@ export class AudioEngine {
   private muted = false;
   private listeners = new Set<Listener>();
   private recordDest: MediaStreamAudioDestinationNode | null = null;
+  private analyser: AnalyserNode | null = null;
+  private meterBuf: Float32Array<ArrayBuffer> | null = null;
   private wantRunning = false;
 
   constructor(
@@ -174,6 +176,26 @@ export class AudioEngine {
 
   setResonance(energy: number) {
     this.graph?.setResonance(this.isAudible ? energy : 0);
+  }
+
+  get presetName(): string {
+    return this.preset.name;
+  }
+
+  /** RMS of the final mix right now (diagnostics / tests). 0 when silent or off. */
+  level(): number {
+    if (!this.ctx || !this.graph) return 0;
+    if (!this.analyser) {
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 2048;
+      this.meterBuf = new Float32Array(new ArrayBuffer(this.analyser.fftSize * 4));
+      this.graph.output.connect(this.analyser);
+    }
+    const buf = this.meterBuf!;
+    this.analyser.getFloatTimeDomainData(buf);
+    let s = 0;
+    for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    return Math.sqrt(s / buf.length);
   }
 
   /** A MediaStream carrying the final mix (post-limiter), for recording. */

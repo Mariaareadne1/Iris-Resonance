@@ -267,6 +267,29 @@ export class Stage {
     this.fitCamera(width, height);
   }
 
+  /**
+   * Render a frame and read back a coarse grid of pixels (diagnostics /
+   * tests): mean luminance and how much of the frame differs from the
+   * backdrop — proof the fabric is actually on screen.
+   */
+  samplePixels(visual: VisualState): { mean: number; spread: number; pixels: number[] } {
+    this.render(0, visual);
+    const gl = this.renderer.getContext();
+    const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    const grid = 24;
+    const px = new Uint8Array(4);
+    const lum: number[] = [];
+    for (let y = 0; y < grid; y++) {
+      for (let x = 0; x < grid; x++) {
+        gl.readPixels(Math.floor(((x + 0.5) / grid) * w), Math.floor(((y + 0.5) / grid) * h), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        lum.push(0.2126 * px[0] + 0.7152 * px[1] + 0.0722 * px[2]);
+      }
+    }
+    const mean = lum.reduce((a, b) => a + b, 0) / lum.length;
+    const spread = Math.sqrt(lum.reduce((a, b) => a + (b - mean) * (b - mean), 0) / lum.length);
+    return { mean, spread, pixels: lum };
+  }
+
   /** Render one frame at high resolution, without any UI, as a PNG data URL. */
   snapshotPNG(visual: VisualState): string {
     const { width, height } = this.size();

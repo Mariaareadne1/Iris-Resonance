@@ -40,7 +40,9 @@ const STRETCH_THRESHOLD = 0.035;
 /** The fabric can't be pulled further than this from where it was grabbed. */
 const MAX_PULL = 0.8;
 /** Drag faster than this (view widths / s) and the fabric slips: a glide. */
-const SLIP_SPEED = 0.9;
+const SLIP_SPEED = 0.5;
+/** Dragged this far past where the fabric can follow, it slips (× MAX_PULL). */
+const SLIP_OVERREACH = 2;
 /** Re-anchor the moving contact after this much travel across the surface (uv). */
 const SLIP_DISTANCE = 0.045;
 /** Never start glide notes closer together than this (s). */
@@ -152,8 +154,9 @@ export class GestureController {
     if (!target.every(Number.isFinite)) return;
     this.speed += (Math.min(20, Math.max(0, speed)) - this.speed) * 0.35;
 
-    // fast travel across the sheet: the fabric slips under the finger
-    if (over && this.speed > SLIP_SPEED) {
+    // fast travel across the sheet: the fabric slips under the finger — and
+    // once sliding it keeps sliding (kinetic friction is lower than static)
+    if (over && (this.phase === 'gliding' || this.speed > SLIP_SPEED)) {
       const du = over.u - this.contact.u, dv = over.v - this.contact.v;
       if (Math.hypot(du * 1.55, dv) > SLIP_DISTANCE) {
         this.slipTo(over);
@@ -161,8 +164,15 @@ export class GestureController {
       }
     }
 
-    // otherwise the fabric sticks and stretches (with a pull limit)
+    // pulled far beyond what the fabric can give: it slips under the finger
     const o = this.grabOrigin;
+    const reach = Math.hypot(target[0] - o[0], target[1] - o[1], target[2] - o[2]);
+    if (over && reach > MAX_PULL * SLIP_OVERREACH) {
+      this.slipTo(over);
+      return;
+    }
+
+    // otherwise the fabric sticks and stretches (with a pull limit)
     let d = this.membranePull([target[0] - o[0], target[1] - o[1], target[2] - o[2]]);
     const len = Math.hypot(d[0], d[1], d[2]);
     if (len > MAX_PULL) d = [d[0] * MAX_PULL / len, d[1] * MAX_PULL / len, d[2] * MAX_PULL / len];
