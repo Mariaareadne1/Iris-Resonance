@@ -129,7 +129,7 @@ test.describe('the instrument in a real browser', () => {
   test('reset returns the fabric to rest', async ({ page }) => {
     await openInstrument(page);
     const from = await canvasPoint(page, 0.5, 0.5);
-    await slowDrag(page, from, await canvasPoint(page, 0.6, 0.35), 500);
+    await slowDrag(page, from, await canvasPoint(page, 0.6, 0.35), 1000);
     expect(await maxDisplacement(page)).toBeGreaterThan(0.1);
     await page.mouse.up();
     await page.getByRole('button', { name: 'Reset fabric' }).click();
