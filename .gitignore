@@ -10,3 +10,4 @@ recordings/
 *.webm
 *.mp4
 !public/**/*.mp4
+.vercel

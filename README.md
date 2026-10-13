@@ -2,6 +2,8 @@
 
 **An instrument made of light and motion.**
 
+**Play it: [iris-resonance.vercel.app](https://iris-resonance.vercel.app)**
+
 A single sheet of holographic fabric floats in the dark. Touch it and it sounds. Pluck it and a ripple runs across the membrane while a note rings. Grab it and pull, and the tone swells and bends as the fabric stretches. Sweep across it and it plays like a harp. The sound and the motion come from the same physical simulation. Nothing is pre-recorded.
 
 ![Iris / Resonance — play mode](docs/screens/play-mode.jpg)
@@ -47,7 +49,8 @@ Then open `http://localhost:5310`.
 | `npm run preview` | Serve the production build on `:4199` |
 | `npm test` | 48 Vitest unit tests (physics, mapping, gestures, offline audio) |
 | `npm run test:e2e` | 17 Playwright tests × Chromium, Firefox and WebKit (see [docs/testing.md](docs/testing.md)) |
-| `E2E_PROD=1 npm run test:e2e` | The same against the production bundle |
+| `E2E_PROD=1 npm run test:e2e` | The same against the local production bundle |
+| `E2E_BASE_URL=https://iris-resonance.vercel.app npm run test:e2e` | The same against the live site |
 | `npm run samples` | Render preset audio samples in Chrome (dev server running) |
 | `npm run to-mp4 -- file.webm` | Convert a recording to an X-ready MP4 |
 
@@ -62,7 +65,7 @@ Then open `http://localhost:5310`.
 
 ```html
 <iframe
-  src="https://YOUR-DEPLOYMENT/?embed=1"
+  src="https://iris-resonance.vercel.app/?embed=1"
   title="Iris / Resonance — a playable holographic membrane"
   style="width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 16px;"
   allow="autoplay"
@@ -74,7 +77,9 @@ With `?embed=1` the title, presets and studio are hidden and the fabric fills th
 
 ## Deploy
 
-It's a static site. On **Vercel**, import the repository (the included `vercel.json` sets the build to `npm run build` and the output to `dist/`), or from a terminal:
+Live at **https://iris-resonance.vercel.app** (Vercel project `iris-resonance`). `.env.production` sets `VITE_SITE_URL` to that origin so the Open Graph / X card image URL is absolute.
+
+To redeploy: `npx vercel --prod`. It's a static site. On **Vercel**, you can also import the repository (the included `vercel.json` sets the build to `npm run build` and the output to `dist/`), or from a terminal:
 
 ```bash
 npx vercel --prod

@@ -92,6 +92,8 @@ reading pixels back from the WebGL frame.
 
 - `npm test`: **48 / 48 passed**
 - `npm run test:e2e` (dev): **51 / 51 passed** (17 × Chromium, Firefox, WebKit)
+- `E2E_BASE_URL=https://iris-resonance.vercel.app npm run test:e2e` (live
+  site, three browsers): **48 passed, 3 skipped** (the dev-only glide test)
 - `E2E_PROD=1 npm run test:e2e` (production bundle): **16 passed, 1 skipped**
   (the Chrome glide test imports source modules, which only the dev server
   serves)

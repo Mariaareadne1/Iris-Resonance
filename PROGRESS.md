@@ -4,6 +4,8 @@ Live log of the Iris / Resonance build. Newest state first.
 
 ## Current state
 
+**Live: https://iris-resonance.vercel.app** (Vercel production; the e2e suite passes against it: 48 passed, 3 dev-only skips).
+
 Feature-complete and verified. All of the brief's completion criteria are
 checked below with their evidence. The remaining items are a live deployment
 (needs a fresh Vercel login) and a human listening pass.
@@ -65,11 +67,10 @@ checked below with their evidence. The remaining items are a live deployment
 
 - node-web-audio-api mis-renders future-scheduled oscillator automation. Unit tests avoid it, and glides plus samples are verified in Chrome.
 - Tested in Firefox and Playwright WebKit, but not in the shipping Safari app, on iOS, or on real touch hardware.
-- Not deployed: the saved Vercel token is invalid (`vercel login` needed).
 - The local Homebrew ffmpeg is broken (missing `libx265.216.dylib`); the project uses `ffmpeg-static` instead.
 
 ## Next steps
 
-1. `npx vercel login && npx vercel --prod`, set `VITE_SITE_URL`, redeploy, and check the X card.
+1. Optionally connect the GitHub repo in Vercel so every push deploys automatically.
 2. A human listening pass on all three presets (docs/audio/*.m4a), then retune by ear.
 3. Check recording in the shipping Safari app and on an iPhone.

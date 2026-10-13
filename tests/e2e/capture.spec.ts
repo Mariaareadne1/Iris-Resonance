@@ -178,7 +178,7 @@ test.describe('touch', () => {
 
 test.describe('audio in real Chrome', () => {
   test('a held tone glides between notes (OfflineAudioContext)', async ({ page }) => {
-    test.skip(process.env.E2E_PROD === '1', 'imports source modules from the dev server');
+    test.skip(process.env.E2E_PROD === '1' || !!process.env.E2E_BASE_URL, 'imports source modules from the dev server');
     await page.goto('/');
     const detected = await page.evaluate(async () => {
       const { AudioGraph } = await import('/src/audio/graph.ts' as string);
