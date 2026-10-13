@@ -42,7 +42,7 @@ checked below with their evidence. The remaining items are a live deployment
 ## Tests executed (latest)
 
 - `npm test`: 45 / 45
-- `npm run test:e2e`: 17 / 17 (dev); `E2E_PROD=1`: 16 passed + 1 dev-only skip
+- `npm run test:e2e`: 51 / 51 across Chromium, Firefox, WebKit (dev); `E2E_PROD=1` (Chromium): 16 passed + 1 dev-only skip
 - `npm run build`: passes
 - Recording decoded with ffmpeg: VP9 + Opus, audio peak −10.9 dBFS
 - Preset measurements: see docs/sound-design.md
@@ -57,12 +57,14 @@ checked below with their evidence. The remaining items are a live deployment
 - Resting sheet read as a "card" → soft folds, reflection-led shading
 - Code review (8 medium/low findings, all fixed): resonance pad silenced in hidden tabs, deferred preset crossfade, WebGL context released on dispose, touch resumes a suspended context, guard reset ends the gesture, demo/pointer race, re-entrant recording start, AudioEngine dispose guard
 - Mobile icon buttons lost accessible names → visually-hidden labels
+- Cross-browser: first touch silent in Firefox/Safari → notes schedule while the context starts; WebKit WebM recordings truncated → Safari records MP4
+- Default volume 0.8 → 0.7 for headroom on hard overlapping plucks
 
 ## Known issues / limitations
 
 - At extreme pulls, a few small ladder-shaped glints can still appear at the tightest fold (the mesh is 61×39). A denser mesh fixes it at a CPU cost.
 - node-web-audio-api mis-renders future-scheduled oscillator automation. Unit tests avoid it, and glides plus samples are verified in Chrome.
-- Not tested on Safari / Firefox or on real touch hardware.
+- Tested in Firefox and Playwright WebKit, but not in the shipping Safari app, on iOS, or on real touch hardware.
 - Not deployed: the saved Vercel token is invalid (`vercel login` needed).
 - The local Homebrew ffmpeg is broken (missing `libx265.216.dylib`); the project uses `ffmpeg-static` instead.
 

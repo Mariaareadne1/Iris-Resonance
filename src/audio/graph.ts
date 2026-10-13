@@ -27,7 +27,7 @@ export interface MixSettings {
 }
 
 export const DEFAULT_MIX: MixSettings = {
-  volume: 0.8,
+  volume: 0.7,
   reverb: 1,
   envelope: { attack: 1, decay: 1 },
 };

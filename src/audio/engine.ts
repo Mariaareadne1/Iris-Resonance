@@ -80,6 +80,16 @@ export class AudioEngine {
     this.emit();
   }
 
+  /**
+   * Notes may be scheduled once sound has been requested, even while the
+   * context is still starting: Firefox and Safari resume asynchronously, and
+   * a note scheduled on a starting context plays the moment it runs. Without
+   * this the very first touch would be silent there.
+   */
+  private get canSchedule(): boolean {
+    return !!this.graph && !!this.ctx && !this.muted && this.wantRunning && (this.ctx.state as string) !== 'closed';
+  }
+
   get isAudible(): boolean {
     return this.status === 'running' && !this.muted;
   }
@@ -162,14 +172,14 @@ export class AudioEngine {
   }
 
   pluck(ev: NoteEvent): boolean {
-    if (!this.graph || !this.isAudible) return false;
+    if (!this.graph || !this.canSchedule) return false;
     const v = this.graph.pluck(ev);
     this.emit();
     return v !== null;
   }
 
   sustainStart(s: SustainState) {
-    if (this.graph && this.isAudible) this.graph.sustainStart(s);
+    if (this.graph && this.canSchedule) this.graph.sustainStart(s);
   }
 
   sustainUpdate(s: SustainState) {
@@ -181,7 +191,7 @@ export class AudioEngine {
   }
 
   setResonance(energy: number) {
-    this.graph?.setResonance(this.isAudible ? energy : 0);
+    this.graph?.setResonance(this.canSchedule ? energy : 0);
   }
 
   get presetName(): string {

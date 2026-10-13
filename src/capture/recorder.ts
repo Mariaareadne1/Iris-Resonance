@@ -6,13 +6,18 @@
  * MediaStreamAudioDestinationNode. The file extension always matches the
  * container the browser actually produced — WebM is never labelled MP4.
  */
-const CANDIDATES = [
-  'video/webm;codecs=vp9,opus',
-  'video/webm;codecs=vp8,opus',
-  'video/webm',
-  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-  'video/mp4',
-];
+const WEBM = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+const MP4 = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4'];
+
+/**
+ * Safari/WebKit records most reliably to MP4 (its native container — WebM
+ * output there was observed to truncate); everyone else gets WebM VP9/Opus.
+ */
+function candidates(): string[] {
+  const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  const isWebKit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS/.test(ua);
+  return isWebKit ? [...MP4, ...WEBM] : [...WEBM, ...MP4];
+}
 
 export interface RecordingResult {
   blob: Blob;
@@ -36,7 +41,7 @@ export function recorderSupport(canvas: HTMLCanvasElement): RecorderSupport {
   if (typeof canvas.captureStream !== 'function') {
     return { supported: false, mimeType: null, reason: 'This browser cannot capture a canvas stream.' };
   }
-  const mimeType = CANDIDATES.find((m) => MediaRecorder.isTypeSupported(m)) ?? null;
+  const mimeType = candidates().find((m) => MediaRecorder.isTypeSupported(m)) ?? null;
   if (!mimeType) return { supported: false, mimeType: null, reason: 'No supported video format.' };
   return { supported: true, mimeType };
 }

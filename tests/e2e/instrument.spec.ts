@@ -115,6 +115,7 @@ test.describe('the instrument in a real browser', () => {
     await page.waitForTimeout(3000); // let the first note ring out
     await page.getByRole('button', { name: 'Sound on' }).click();
     await expect(page.getByRole('button', { name: 'Muted' })).toHaveAttribute('aria-pressed', 'false');
+    await page.waitForTimeout(300); // the mute is a short click-free fade (τ 30 ms), not a hard cut
     const before = (await probe(page)).notes;
     await page.mouse.click(p.x, p.y);
     expect((await probe(page)).notes).toBe(before);

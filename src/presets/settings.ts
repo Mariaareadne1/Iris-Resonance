@@ -35,7 +35,7 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   preset: 'Glass',
   scale: DEFAULT_MUSIC.scale,
   root: DEFAULT_MUSIC.root,
-  volume: 0.8,
+  volume: 0.7,
   reverb: 1,
   attack: 1,
   decay: 1,

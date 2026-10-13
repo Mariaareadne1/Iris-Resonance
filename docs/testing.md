@@ -57,8 +57,10 @@ detected pitch by 2 semitones. The resonance follows energy and stays quiet. A s
 
 ## Browser tests — Playwright (`npm run test:e2e`)
 
-17 tests in `tests/e2e/`, real Chromium on the GPU (Metal on Apple Silicon;
+17 tests in `tests/e2e/`, each run in **Chromium, Firefox and WebKit**
+(Playwright's Safari engine). Chromium uses the GPU (Metal on Apple Silicon;
 set `E2E_SWIFTSHADER=1` for software WebGL elsewhere, which is much slower).
+Run one engine with `--project=chromium|firefox|webkit`.
 `window.__iris` (enabled by `?debug=1`) exposes read-only probes. Audio level
 is measured with an `AnalyserNode` on the final mix; rendering is checked by
 reading pixels back from the WebGL frame.
@@ -86,7 +88,7 @@ reading pixels back from the WebGL frame.
 ## Latest results (2026-10-12, Apple M2 Pro, macOS, Chromium headless on Metal)
 
 - `npm test`: **45 / 45 passed**
-- `npm run test:e2e` (dev): **17 / 17 passed**
+- `npm run test:e2e` (dev): **51 / 51 passed** (17 × Chromium, Firefox, WebKit)
 - `E2E_PROD=1 npm run test:e2e` (production bundle): **16 passed, 1 skipped**
   (the Chrome glide test imports source modules, which only the dev server
   serves)
@@ -106,11 +108,26 @@ a maximum stretch, the release ring, the Studio panel, mobile and embed
 layouts, and showcase contact sheets. Those inspections led to several fixes
 (see `PROGRESS.md`).
 
+## Cross-browser findings
+
+Running Firefox and WebKit surfaced two real bugs, both now fixed:
+
+- **The first touch was silent in Firefox and Safari.** Their `AudioContext`
+  resumes asynchronously, and the first pluck was dropped while the engine was
+  still `starting`. Notes are now scheduled as soon as sound has been
+  requested, and they play the moment the context runs.
+- **WebKit's WebM recordings were truncated** (some decoded only 0.2 s).
+  Safari/WebKit now records MP4 (H.264 + AAC), its native container: 5 of 5
+  repeated runs decoded fully. Firefox records WebM VP8 + Opus.
+
+Measured in each engine: offline renders of the same note agree within
+1 dB; the live frame rate at 1280×800 is 44–57 fps in WebKit and 46–48 fps in
+Firefox (Chromium 61–62).
+
 ## Not verified automatically
 
 - **Subjective sound quality.** Not auditioned by a human during development;
   only measured (see sound-design.md).
-- Safari and Firefox were not run. Recording falls back to MP4 or reports
-  "unsupported" by runtime detection, and that path is untested on those
-  browsers.
+- Real Safari and iOS Safari: WebKit was tested through Playwright's build of
+  the engine, not the shipping Safari app or an iPhone.
 - Real touch hardware: touch is emulated by Playwright.

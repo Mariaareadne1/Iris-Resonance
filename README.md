@@ -46,7 +46,7 @@ Then open `http://localhost:5310`.
 | `npm run build` | Typecheck + production build into `dist/` |
 | `npm run preview` | Serve the production build on `:4199` |
 | `npm test` | 45 Vitest unit tests (physics, mapping, gestures, offline audio) |
-| `npm run test:e2e` | 17 Playwright tests in real Chromium (needs a GPU; see [docs/testing.md](docs/testing.md)) |
+| `npm run test:e2e` | 17 Playwright tests × Chromium, Firefox and WebKit (see [docs/testing.md](docs/testing.md)) |
 | `E2E_PROD=1 npm run test:e2e` | The same against the production bundle |
 | `npm run samples` | Render preset audio samples in Chrome (dev server running) |
 | `npm run to-mp4 -- file.webm` | Convert a recording to an X-ready MP4 |
@@ -54,7 +54,7 @@ Then open `http://localhost:5310`.
 ## Capture for X / a portfolio
 
 - **Save image:** a high-resolution PNG of the WebGL scene only, with no interface, rendered at 2–4× the window (the long side is at least 3200 px for typical windows).
-- **Record video:** records the canvas plus the instrument's own audio (routed through a `MediaStreamAudioDestinationNode`) with `MediaRecorder`. The format is detected at runtime (WebM VP9/Opus in Chrome, MP4 where Safari offers it), and the file extension always matches what the browser produced. If audio isn't available, the UI says "video only" rather than saving a silent file without telling you. Play while it records (the demo works well), then **Stop & save**.
+- **Record video:** records the canvas plus the instrument's own audio (routed through a `MediaStreamAudioDestinationNode`) with `MediaRecorder`. The format is detected at runtime (WebM VP9/Opus in Chrome, WebM VP8/Opus in Firefox, MP4 H.264/AAC in Safari), and the file extension always matches what the browser produced. If audio isn't available, the UI says "video only" rather than saving a silent file without telling you. Play while it records (the demo works well), then **Stop & save**.
 - **MP4 for X:** `npm run to-mp4 -- iris-resonance-….webm` makes an H.264 High / AAC 48 kHz, constant 60 fps, fast-start MP4 (it uses the bundled `ffmpeg-static`).
 - **Clean view** (`C`) hides the interface for screen recorders.
 

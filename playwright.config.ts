@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * E2E runs in real Chromium. Default: against the Vite dev server.
@@ -21,8 +21,12 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     viewport: { width: 1280, height: 800 },
     acceptDownloads: true,
-    launchOptions: { args: gpuArgs },
   },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, launchOptions: { args: gpuArgs } } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 800 } } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 800 } } },
+  ],
   webServer: {
     command: prod ? 'npm run build && npm run preview' : 'npm run dev',
     port,
