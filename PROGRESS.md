@@ -72,6 +72,5 @@ checked below with their evidence. The remaining items are a live deployment
 
 ## Next steps
 
-1. Optionally connect the GitHub repo in Vercel so every push deploys automatically.
 2. A human listening pass on all three presets (docs/audio/*.m4a), then retune by ear.
 3. Check recording in the shipping Safari app and on an iPhone.

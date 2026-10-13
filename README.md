@@ -83,7 +83,7 @@ With `?embed=1` the title, presets and studio are hidden and the fabric fills th
 
 Live at **https://iris-resonance.vercel.app** (Vercel project `iris-resonance`). `.env.production` sets `VITE_SITE_URL` to that origin so the Open Graph / X card image URL is absolute.
 
-To redeploy: `npx vercel --prod`. It's a static site. On **Vercel**, you can also import the repository (the included `vercel.json` sets the build to `npm run build` and the output to `dist/`), or from a terminal:
+The GitHub repository is connected to Vercel, so every push to `main` deploys to production automatically (`npx vercel --prod` also works by hand). It's a static site. On **Vercel**, you can also import the repository (the included `vercel.json` sets the build to `npm run build` and the output to `dist/`), or from a terminal:
 
 ```bash
 npx vercel --prod
