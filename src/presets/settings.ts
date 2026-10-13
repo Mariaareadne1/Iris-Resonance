@@ -4,6 +4,7 @@ import { SOUND_PRESETS } from './sound.ts';
 import { DEFAULT_MUSIC, type MusicConfig } from '../music/mapping.ts';
 import type { MembraneParams } from '../physics/membrane.ts';
 import type { MixSettings } from '../audio/graph.ts';
+import { DEFAULT_PALETTE, paletteFromColor, resolvePalette, type FabricPalette } from './palettes.ts';
 
 /** Everything Studio Mode can change. Each field is wired to something real. */
 export interface StudioSettings {
@@ -27,6 +28,10 @@ export interface StudioSettings {
   ringing: number;
   /** 0..1.5 iridescence */
   iridescence: number;
+  /** palette name, or 'Custom' to use `fabricColor` */
+  fabric: string;
+  /** #rrggbb used when fabric is 'Custom' */
+  fabricColor: string;
   background: string;
   reducedMotion: boolean;
 }
@@ -43,9 +48,17 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   responsiveness: 0.6,
   ringing: 1,
   iridescence: 1,
+  fabric: 'Iris',
+  fabricColor: '#9d7bff',
   background: '#070814',
   reducedMotion: false,
 };
+
+/** The fabric palette a settings object selects. */
+export function paletteFor(s: StudioSettings): FabricPalette {
+  if (s.fabric === 'Custom') return paletteFromColor(s.fabricColor);
+  return resolvePalette(s.fabric) ?? DEFAULT_PALETTE;
+}
 
 export function musicConfigFor(s: StudioSettings): MusicConfig {
   return {

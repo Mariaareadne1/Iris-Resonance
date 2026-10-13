@@ -6,7 +6,7 @@ decoded media.
 
 ## Unit tests — Vitest (`npm test`)
 
-48 tests in `tests/unit/`, run in Node.
+52 tests in `tests/unit/`, run in Node.
 
 **Physics** (`physics.test.ts`, 11):
 - the rest pose is an equilibrium; a still sheet stays still
@@ -29,6 +29,10 @@ once; boundary jitter never retriggers; fast jumps land directly.
 
 **Render-mesh refinement** (`upsample.test.ts`, 3): exact at simulated
 vertices, linear fields reproduced exactly, grid-scale zig-zags not amplified.
+
+**Palettes** (`palettes.test.ts`, 4): curated palettes are well-formed;
+names resolve case-insensitively and junk doesn't; a custom colour gives a
+valid palette centred on its hue; settings select the right palette.
 
 **Gestures** (`gesture.test.ts`, 10), with a recording sound double: a tap is
 exactly one in-scale note and no sustain; stronger taps are louder *and*
@@ -80,6 +84,7 @@ reading pixels back from the WebGL frame.
 | Reset | displacement > 0.1 while held → < 0.05 after Reset |
 | Keyboard | A / H / ' play rising notes and start audio |
 | Studio | root A + major pentatonic → the lowest key plays an A |
+| Fabric colour | a swatch and the custom picker change the shader's hue centre; `?fabric=rose` sets it on load |
 | Save image | PNG signature, ≥ 2560×1600, > 200 KB |
 | Record video | WebM with **video and audio streams**, decoded end to end by ffmpeg, peak > −40 dBFS, extension matches MIME |
 | Showcase | ≥ 4 plucks, a stretch, a glide, a release; ends by itself; replay; interrupted by touching the fabric |
@@ -90,8 +95,8 @@ reading pixels back from the WebGL frame.
 
 ## Latest results (2026-10-12, Apple M2 Pro, macOS, Chromium headless on Metal)
 
-- `npm test`: **48 / 48 passed**
-- `npm run test:e2e` (dev): **51 / 51 passed** (17 × Chromium, Firefox, WebKit)
+- `npm test`: **52 / 52 passed**
+- `npm run test:e2e` (dev): **57 / 57 passed** (19 × Chromium, Firefox, WebKit)
 - `E2E_BASE_URL=https://iris-resonance.vercel.app npm run test:e2e` (live
   site, three browsers): **48 passed, 3 skipped** (the dev-only glide test)
 - `E2E_PROD=1 npm run test:e2e` (production bundle): **16 passed, 1 skipped**

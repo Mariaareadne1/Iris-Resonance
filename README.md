@@ -27,7 +27,9 @@ Listen to the three presets playing the showcase phrase, rendered offline throug
 
 The default scale is D minor pentatonic from D (Glass plays an octave up), so any combination of notes sounds consonant. The first touch on the fabric turns the sound on; the **Sound** button mirrors the real `AudioContext` state and mutes or unmutes.
 
-**Controls:** Sound · Glass / Silk / Ether · Play demo · Capture (image, video, clean view) · Reset · Customize (Studio: scale, root, volume, reverb, attack, decay, tension, responsiveness, ringing, iridescence, background, reduced motion).
+**Controls:** Sound · Glass / Silk / Ether · Play demo · Capture (image, video, clean view) · Reset · Customize (Studio: scale, root, volume, reverb, attack, decay, tension, responsiveness, ringing, **fabric colour**, iridescence, background, reduced motion).
+
+**Fabric colour:** Studio → Light → Fabric colour offers six palettes (Iris, Pearl, Rose, Aurora, Ember, Ice) and a custom picker that builds a holographic palette around any colour. The pitch you play still tints it: low notes lean one way, high notes the other.
 
 ## Run it
 
@@ -47,8 +49,8 @@ Then open `http://localhost:5310`.
 |---|---|
 | `npm run build` | Typecheck + production build into `dist/` |
 | `npm run preview` | Serve the production build on `:4199` |
-| `npm test` | 48 Vitest unit tests (physics, mapping, gestures, offline audio) |
-| `npm run test:e2e` | 17 Playwright tests × Chromium, Firefox and WebKit (see [docs/testing.md](docs/testing.md)) |
+| `npm test` | 52 Vitest unit tests (physics, mapping, gestures, offline audio) |
+| `npm run test:e2e` | 19 Playwright tests × Chromium, Firefox and WebKit (see [docs/testing.md](docs/testing.md)) |
 | `E2E_PROD=1 npm run test:e2e` | The same against the local production bundle |
 | `E2E_BASE_URL=https://iris-resonance.vercel.app npm run test:e2e` | The same against the live site |
 | `npm run samples` | Render preset audio samples in Chrome (dev server running) |
@@ -72,6 +74,8 @@ Then open `http://localhost:5310`.
   loading="lazy"
 ></iframe>
 ```
+
+Add `&fabric=rose` (any palette name) or `&fabric=%23ff8800` (any hex colour) to match your site's colours.
 
 With `?embed=1` the title, presets and studio are hidden and the fabric fills the frame. A small sound button sits in the corner. **An embed never makes sound until that button is pressed**, even if the visitor touches the fabric. The mouse wheel is never captured, so the host page scrolls normally. Touches that start on the fabric play it; touches on empty space scroll the page.
 

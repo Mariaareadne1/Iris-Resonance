@@ -56,6 +56,15 @@ export function createBackdrop() {
 
   return {
     mesh,
+    /** glow follows the fabric palette: low notes toward `low`, high toward `high` */
+    setGlow(low: string, high: string) {
+      // normalise brightness so pale palettes (Pearl) don't flood the scene
+      for (const [u, hex] of [[uniforms.uGlowLow, low], [uniforms.uGlowHigh, high]] as const) {
+        const c = u.value.set(hex);
+        const lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+        c.multiplyScalar(0.3 * Math.min(1, 0.35 / Math.max(lum, 1e-3)));
+      }
+    },
     setBase(hex: string) {
       if (/^#[0-9a-f]{6}$/i.test(hex)) uniforms.uBase.value.set(hex);
     },

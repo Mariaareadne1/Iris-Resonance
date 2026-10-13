@@ -161,4 +161,21 @@ test.describe('the instrument in a real browser', () => {
     const midi = (await probe(page)).gestures[0].midi;
     expect(((midi % 12) + 12) % 12).toBe(9); // lowest region is the new root, A
   });
+
+  test('fabric colour: swatches and the custom picker recolour the shader', async ({ page }) => {
+    await openInstrument(page);
+    const hue = () => page.evaluate(() => (window as unknown as { __iris: { stage: { uniforms: { uHueCenter: { value: number } } } } }).__iris.stage.uniforms.uHueCenter.value);
+    expect(await hue()).toBeCloseTo(0.66, 3);
+    await page.getByRole('button', { name: 'Customize' }).click();
+    await page.getByRole('radio', { name: 'Ember' }).click();
+    expect(await hue()).toBeCloseTo(0.05, 3);
+    await page.locator('.swatch-custom input[type=color]').fill('#00c2a8');
+    expect(await hue()).toBeCloseTo(0.476, 2);
+  });
+
+  test('?fabric= sets the initial colour (for matching a portfolio)', async ({ page }) => {
+    await openInstrument(page, '&fabric=rose');
+    const hue = await page.evaluate(() => (window as unknown as { __iris: { stage: { uniforms: { uHueCenter: { value: number } } } } }).__iris.stage.uniforms.uHueCenter.value);
+    expect(hue).toBeCloseTo(0.92, 3);
+  });
 });

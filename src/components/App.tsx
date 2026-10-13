@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Instrument, type InstrumentState } from '../app/instrument.ts';
 import { DEFAULT_SETTINGS, type StudioSettings } from '../presets/settings.ts';
 import { PRESET_NAMES } from '../presets/sound.ts';
+import { resolvePalette } from '../presets/palettes.ts';
 import { StudioPanel } from './StudioPanel.tsx';
 import { SoundButton } from './SoundButton.tsx';
 import { CaptureMenu } from './CaptureMenu.tsx';
@@ -10,18 +11,27 @@ import { PlayIcon, ResetIcon, SlidersIcon, StopIcon } from './icons.tsx';
 export interface AppProps {
   embed: boolean;
   debug: boolean;
+  /** initial fabric palette from the URL (?fabric=rose or ?fabric=%23ff8800) */
+  fabric?: string | null;
+}
+
+function fabricFromUrl(value: string | null | undefined): Partial<StudioSettings> {
+  const p = resolvePalette(value);
+  if (!p) return {};
+  return p.name === 'Custom' ? { fabric: 'Custom', fabricColor: `#${value!.replace(/^#/, '').toLowerCase()}` } : { fabric: p.name };
 }
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
 
-export function App({ embed, debug }: AppProps) {
+export function App({ embed, debug, fabric }: AppProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [inst, setInst] = useState<Instrument | null>(null);
   const [state, setState] = useState<InstrumentState | null>(null);
   const [settings, setSettings] = useState<StudioSettings>(() => ({
     ...DEFAULT_SETTINGS,
+    ...fabricFromUrl(fabric),
     reducedMotion: prefersReducedMotion(),
   }));
   const [studioOpen, setStudioOpen] = useState(false);

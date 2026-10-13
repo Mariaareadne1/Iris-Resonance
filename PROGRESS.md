@@ -36,6 +36,7 @@ checked below with their evidence. The remaining items are a live deployment
 - Presets Glass / Silk / Ether; Studio (scale, root, volume, reverb, attack, decay, tension, responsiveness, ringing, iridescence, background, reduced motion)
 - Sound button mirrors the real AudioContext state; mute
 - Keyboard play (A … '), clean view (C), Esc
+- Fabric colour: 6 palettes + custom colour (Studio), `?fabric=` URL parameter
 - Showcase demo (~14 s) on the real gesture API, replayable and interruptible
 - PNG export, WebM/MP4 recording with audio, `npm run to-mp4`
 - `?embed=1` portfolio mode; responsive desktop and mobile layouts
@@ -43,8 +44,8 @@ checked below with their evidence. The remaining items are a live deployment
 
 ## Tests executed (latest)
 
-- `npm test`: 48 / 48
-- `npm run test:e2e`: 51 / 51 across Chromium, Firefox, WebKit (dev); `E2E_PROD=1` (Chromium): 16 passed + 1 dev-only skip
+- `npm test`: 52 / 52
+- `npm run test:e2e`: 57 / 57 across Chromium, Firefox, WebKit (dev); `E2E_PROD=1` (Chromium): 16 passed + 1 dev-only skip
 - `npm run build`: passes
 - Recording decoded with ffmpeg: VP9 + Opus, audio peak −10.9 dBFS
 - Preset measurements: see docs/sound-design.md

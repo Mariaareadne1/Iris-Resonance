@@ -10,6 +10,7 @@ import { createResonanceMaterial, type ResonanceUniforms } from './holoMaterial.
 import { GrainShader, createBackdrop } from './backdrop.ts';
 import type { VisualState } from './visualState.ts';
 import { fineSize, upsampleGrid } from './upsample.ts';
+import { DEFAULT_PALETTE, type FabricPalette } from '../presets/palettes.ts';
 
 export interface SurfaceHit {
   point: SurfacePoint;
@@ -21,6 +22,8 @@ export interface LookSettings {
   iridescence: number;
   /** backdrop base color */
   background: string;
+  /** fabric colour palette */
+  palette: FabricPalette;
   reducedMotion: boolean;
 }
 
@@ -59,7 +62,7 @@ export class Stage {
   private baseDistance = 6;
   private pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   private resizeObserver: ResizeObserver;
-  private look: LookSettings = { iridescence: 1, background: '#070814', reducedMotion: false };
+  private look: LookSettings = { iridescence: 1, background: '#070814', palette: DEFAULT_PALETTE, reducedMotion: false };
   private time = 0;
 
   constructor(private host: HTMLElement, private membrane: Membrane) {
@@ -162,8 +165,19 @@ export class Stage {
     this.look = { ...look };
     const k = Math.max(0, Math.min(1.5, look.iridescence));
     this.uniforms.uHoloIntensity.value = 0.95 * k;
-    this.material.iridescence = Math.min(1, 0.4 + 0.6 * k);
     this.backdrop.setBase(look.background);
+    const p = look.palette;
+    const u = this.uniforms;
+    u.uPalA.value.set(p.a);
+    u.uPalB.value.set(p.b);
+    u.uPalC.value.set(p.c);
+    u.uHueCenter.value = p.hue;
+    u.uHueRange.value = p.hueRange;
+    u.uSaturation.value = p.saturation;
+    this.material.color.set(p.base);
+    this.material.sheenColor.set(p.sheen);
+    this.material.iridescence = Math.min(1, (0.4 + 0.6 * k) * p.film);
+    this.backdrop.setGlow(p.a, p.b);
     if (look.reducedMotion) this.parallaxTarget.set(0, 0);
   }
 

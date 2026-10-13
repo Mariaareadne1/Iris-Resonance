@@ -137,6 +137,9 @@ injected diffraction flakes), extended with:
 - `uPitch` → hue leans violet for low notes and cyan for high
 - `uAttack`, `uEnergy` → a brief swell per note and a shimmer while ringing
 - rounded-corner cutout and a soft hem light
+- palette uniforms (`uPalA/B/C`, `uHueCenter`, `uHueRange`, saturation, plus
+  dye, sheen and thin-film strength) from `presets/palettes.ts`. The
+  thin-film term leans violet, so warm and green palettes keep it low.
 
 The backdrop is drawn in-scene (one full-screen triangle), so it appears in
 PNG exports and video recordings. Its glow follows pitch and membrane energy.
@@ -167,4 +170,5 @@ fitted, including inside iframes.
 | Flag | Effect |
 |---|---|
 | `?embed=1` | Compact portfolio embed (see README) |
+| `?fabric=rose` / `?fabric=%23ff8800` | Initial fabric palette (name or hex colour) |
 | `?debug=1` | Exposes `window.__iris` for tests and diagnostics (always on in dev) |

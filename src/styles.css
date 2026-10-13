@@ -382,6 +382,47 @@ kbd {
   color: var(--ink-soft);
 }
 
+/* ── fabric swatches ─────────────────────────────────────── */
+
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s;
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch[aria-checked='true'], .swatch[data-checked='true'] {
+  box-shadow: 0 0 0 2px var(--night), 0 0 0 3.5px #f1eeff;
+}
+.swatch-custom {
+  display: grid;
+  place-items: center;
+  background: conic-gradient(from 90deg, #ff6f91, #ffd36e, #5dffc3, #6ad6ff, #9d7bff, #ff6f91);
+  overflow: hidden;
+}
+.swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.swatch-custom:focus-within { outline: 1.5px solid var(--cyan); outline-offset: 3px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ── clean view & embed ───────────────────────────────────── */
 
 .is-clean .masthead, .is-clean .dock, .is-clean .hint, .is-clean .toast, .is-clean #studio { opacity: 0; pointer-events: none; }

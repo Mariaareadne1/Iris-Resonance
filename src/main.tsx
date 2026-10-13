@@ -8,4 +8,6 @@ const flag = (name: string) => ['1', 'true', 'yes'].includes((params.get(name) ?
 const root = document.getElementById('root');
 if (!root) throw new Error('#root element missing from index.html');
 
-createRoot(root).render(<App embed={flag('embed')} debug={flag('debug') || import.meta.env.DEV} />);
+createRoot(root).render(
+  <App embed={flag('embed')} debug={flag('debug') || import.meta.env.DEV} fabric={params.get('fabric')} />,
+);

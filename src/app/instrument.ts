@@ -13,6 +13,7 @@ import {
   membraneParamsFor,
   mixFor,
   musicConfigFor,
+  paletteFor,
   rootMidiFor,
   type StudioSettings,
 } from '../presets/settings.ts';
@@ -192,7 +193,7 @@ export class Instrument {
     this.audio.setRoot(rootMidiFor(s));
     this.audio.setMix(mixFor(s));
     this.audioConfigured = true;
-    this.stage.setLook({ iridescence: s.iridescence, background: s.background, reducedMotion: s.reducedMotion });
+    this.stage.setLook({ iridescence: s.iridescence, background: s.background, palette: paletteFor(s), reducedMotion: s.reducedMotion });
   }
 
   private audioConfigured = false;

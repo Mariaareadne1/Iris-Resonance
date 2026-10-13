@@ -3,6 +3,7 @@ import { SCALE_NAMES, NOTE_NAMES, type ScaleName } from '../music/scales.ts';
 import { PRESET_NAMES, type PresetName } from '../presets/sound.ts';
 import { DEFAULT_SETTINGS, type StudioSettings } from '../presets/settings.ts';
 import { NOTE_KEY_LABELS } from '../interaction/keyboard.ts';
+import { PALETTES, paletteFromColor } from '../presets/palettes.ts';
 import { CloseIcon } from './icons.tsx';
 
 interface StudioPanelProps {
@@ -108,6 +109,40 @@ export function StudioPanel({ settings: s, onChange, onClose }: StudioPanelProps
       </Section>
 
       <Section title="Light">
+        <div className="field">
+          <span className="field-label" id="fabric-label">Fabric colour</span>
+          <div className="swatches" role="radiogroup" aria-labelledby="fabric-label">
+            {PALETTES.map((p) => (
+              <button
+                key={p.name}
+                role="radio"
+                aria-checked={s.fabric === p.name}
+                aria-label={p.name}
+                title={p.name}
+                className="swatch"
+                style={{ background: `linear-gradient(135deg, ${p.a}, ${p.b} 55%, ${p.c})` }}
+                onClick={() => set('fabric', p.name)}
+              />
+            ))}
+            <label
+              className="swatch swatch-custom"
+              title="Custom colour"
+              data-checked={s.fabric === 'Custom'}
+              style={s.fabric === 'Custom' ? (() => {
+                const c = paletteFromColor(s.fabricColor);
+                return { background: `linear-gradient(135deg, ${c.a}, ${c.b} 55%, ${c.c})` };
+              })() : undefined}
+            >
+              <span className="sr-only">Custom colour</span>
+              <input
+                type="color"
+                value={s.fabricColor}
+                onChange={(e) => onChange({ ...s, fabric: 'Custom', fabricColor: e.target.value })}
+              />
+            </label>
+          </div>
+          <p className="field-hint">{s.fabric === 'Custom' ? 'Custom' : s.fabric} · pitch still tints it as you play</p>
+        </div>
         <Slider label="Iridescence" value={s.iridescence} min={0} max={1.5} step={0.01} onChange={(v) => set('iridescence', v)} />
         <div className="field field-inline">
           <label htmlFor="bg">Background</label>

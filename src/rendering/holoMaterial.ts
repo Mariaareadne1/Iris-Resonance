@@ -29,6 +29,8 @@ export interface ResonanceUniforms {
   uPalA: THREE.IUniform<THREE.Color>;
   uPalB: THREE.IUniform<THREE.Color>;
   uPalC: THREE.IUniform<THREE.Color>;
+  uHueCenter: THREE.IUniform<number>;
+  uHueRange: THREE.IUniform<number>;
   uTime: THREE.IUniform<number>;
   uPitch: THREE.IUniform<number>;
   uAttack: THREE.IUniform<number>;
@@ -77,6 +79,8 @@ export function createResonanceMaterial(): ResonanceMaterial {
     uPalA: { value: new THREE.Color('#9d7bff') }, // violet
     uPalB: { value: new THREE.Color('#7fe6ff') }, // cyan
     uPalC: { value: new THREE.Color('#ffc2ea') }, // pale pink
+    uHueCenter: { value: 0.66 },
+    uHueRange: { value: 0.14 },
     uTime: { value: 0 },
     uPitch: { value: 0.5 },
     uAttack: { value: 0 },
@@ -114,6 +118,8 @@ export function createResonanceMaterial(): ResonanceMaterial {
       uniform vec3 uPalA;
       uniform vec3 uPalB;
       uniform vec3 uPalC;
+      uniform float uHueCenter;
+      uniform float uHueRange;
       uniform float uTime;
       uniform float uPitch;
       uniform float uAttack;
@@ -172,8 +178,8 @@ export function createResonanceMaterial(): ResonanceMaterial {
           float pitchShift = (uPitch - 0.5) * 0.22;
           float rawPhase = fract(uHueShift + pitchShift + facing * uBandFreq + radial
                                  + rnd * 0.05 + uTime * 0.012 + vWave * 0.08);
-          // fold hue into a lavender / violet / cyan arc rather than a full rainbow
-          float hue = 0.66 + 0.14 * cos(6.28318 * rawPhase) - pitchShift * 0.6;
+          // fold hue into the palette's arc (Iris: lavender / violet / cyan) rather than a full rainbow
+          float hue = fract(uHueCenter + uHueRange * cos(6.28318 * rawPhase) - pitchShift * 0.6);
           vec3 rainbow = holoHsv2rgb(vec3(hue, uSaturation, 1.0));
           rainbow = mix(rainbow, palRamp(rawPhase), uPalMix);
 
