@@ -45,7 +45,7 @@ Then open `http://localhost:5310`.
 |---|---|
 | `npm run build` | Typecheck + production build into `dist/` |
 | `npm run preview` | Serve the production build on `:4199` |
-| `npm test` | 45 Vitest unit tests (physics, mapping, gestures, offline audio) |
+| `npm test` | 48 Vitest unit tests (physics, mapping, gestures, offline audio) |
 | `npm run test:e2e` | 17 Playwright tests × Chromium, Firefox and WebKit (see [docs/testing.md](docs/testing.md)) |
 | `E2E_PROD=1 npm run test:e2e` | The same against the production bundle |
 | `npm run samples` | Render preset audio samples in Chrome (dev server running) |

@@ -9,6 +9,7 @@ import type { Membrane, SurfacePoint, Vec3 } from '../physics/membrane.ts';
 import { createResonanceMaterial, type ResonanceUniforms } from './holoMaterial.ts';
 import { GrainShader, createBackdrop } from './backdrop.ts';
 import type { VisualState } from './visualState.ts';
+import { fineSize, upsampleGrid } from './upsample.ts';
 
 export interface SurfaceHit {
   point: SurfacePoint;
@@ -44,6 +45,11 @@ export class Stage {
   private uniforms: ResonanceUniforms;
   private material: THREE.MeshPhysicalMaterial;
   private backdrop: ReturnType<typeof createBackdrop>;
+  /** render mesh is the simulation grid refined 2× (Catmull-Rom) */
+  private fine: { cols: number; rows: number };
+  private coarseScalars: Float32Array;
+  private scratch3: Float32Array;
+  private scratch2: Float32Array;
   private waveAttr: THREE.BufferAttribute;
   private strainAttr: THREE.BufferAttribute;
   private raycaster = new THREE.Raycaster();
@@ -99,16 +105,21 @@ export class Stage {
     const aniso = this.renderer.capabilities.getMaxAnisotropy();
     if (this.material.roughnessMap) this.material.roughnessMap.anisotropy = aniso;
 
-    this.geometry = buildGridGeometry(membrane, membrane.positions);
+    this.fine = fineSize(membrane.cols, membrane.rows);
+    const fineCount = this.fine.cols * this.fine.rows;
+    this.coarseScalars = new Float32Array(membrane.count * 2);
+    this.scratch3 = new Float32Array(membrane.rows * this.fine.cols * 3);
+    this.scratch2 = new Float32Array(membrane.rows * this.fine.cols * 2);
+    this.geometry = buildGridGeometry(this.fine.cols, this.fine.rows, new Float32Array(fineCount * 3));
     const posAttr = this.geometry.getAttribute('position') as THREE.BufferAttribute;
     posAttr.setUsage(THREE.DynamicDrawUsage);
-    this.waveAttr = new THREE.BufferAttribute(new Float32Array(membrane.count), 1);
+    this.waveAttr = new THREE.BufferAttribute(new Float32Array(fineCount), 1);
     this.waveAttr.setUsage(THREE.DynamicDrawUsage);
-    this.strainAttr = new THREE.BufferAttribute(new Float32Array(membrane.count), 1);
+    this.strainAttr = new THREE.BufferAttribute(new Float32Array(fineCount), 1);
     this.strainAttr.setUsage(THREE.DynamicDrawUsage);
     this.geometry.setAttribute('aWave', this.waveAttr);
     this.geometry.setAttribute('aStrain', this.strainAttr);
-    this.geometry.computeVertexNormals();
+    this.syncGeometry();
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.frustumCulled = false;
     this.scene.add(this.mesh);
@@ -116,7 +127,7 @@ export class Stage {
     // undeformed copy (never rendered) — tells us which part of the fabric
     // sits under the pointer even while the real sheet is being pulled away
     this.restMesh = new THREE.Mesh(
-      buildGridGeometry(membrane, new Float32Array(membrane.cloth.rest)),
+      buildGridGeometry(membrane.cols, membrane.rows, new Float32Array(membrane.cloth.rest)),
       new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }),
     );
     this.restMesh.updateMatrixWorld();
@@ -208,20 +219,7 @@ export class Stage {
   /** Push the membrane state into the GPU and draw a frame. */
   render(dt: number, visual: VisualState) {
     this.time += dt;
-    const m = this.membrane;
-    (this.geometry.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
-    this.geometry.computeVertexNormals();
-
-    const wave = this.waveAttr.array as Float32Array;
-    const strain = this.strainAttr.array as Float32Array;
-    const h = m.wave.h;
-    for (let i = 0; i < m.count; i++) {
-      const v = Math.abs(m.wave.velocityAt(i));
-      wave[i] = Math.min(1.5, v * 0.9 + Math.abs(h[i]) * 9);
-      strain[i] = Math.min(1, Math.max(0, m.cloth.strain[i] * 9));
-    }
-    this.waveAttr.needsUpdate = true;
-    this.strainAttr.needsUpdate = true;
+    this.syncGeometry();
 
     const u = this.uniforms;
     u.uTime.value = this.time % 1000;
@@ -240,6 +238,36 @@ export class Stage {
     this.placeCamera();
     this.composer.render(dt);
   }
+
+  /** Refine the simulated surface and its resonance attributes onto the render mesh. */
+  private syncGeometry() {
+    const m = this.membrane;
+    const pos = this.geometry.getAttribute('position') as THREE.BufferAttribute;
+    upsampleGrid(m.positions, m.cols, m.rows, 3, this.scratch3, pos.array as Float32Array);
+    pos.needsUpdate = true;
+    this.geometry.computeVertexNormals();
+
+    const s = this.coarseScalars;
+    const h = m.wave.h;
+    for (let i = 0; i < m.count; i++) {
+      const v = Math.abs(m.wave.velocityAt(i));
+      s[i * 2] = Math.min(1.5, v * 0.9 + Math.abs(h[i]) * 9);
+      s[i * 2 + 1] = Math.min(1, Math.max(0, m.cloth.strain[i] * 9));
+    }
+    const fineCount = this.fine.cols * this.fine.rows;
+    const both = this.fineScalars ?? (this.fineScalars = new Float32Array(fineCount * 2));
+    upsampleGrid(s, m.cols, m.rows, 2, this.scratch2, both);
+    const wave = this.waveAttr.array as Float32Array;
+    const strain = this.strainAttr.array as Float32Array;
+    for (let i = 0; i < fineCount; i++) {
+      wave[i] = Math.max(0, both[i * 2]);
+      strain[i] = Math.max(0, both[i * 2 + 1]);
+    }
+    this.waveAttr.needsUpdate = true;
+    this.strainAttr.needsUpdate = true;
+  }
+
+  private fineScalars: Float32Array | null = null;
 
   private placeCamera() {
     const d = this.baseDistance;
@@ -326,8 +354,7 @@ export class Stage {
 }
 
 /** Indexed, checkerboard-triangulated grid sharing `positions` (row 0 = top), uv.y = 1 at top. */
-function buildGridGeometry(m: Membrane, positions: Float32Array): THREE.BufferGeometry {
-  const { cols, rows } = m;
+function buildGridGeometry(cols: number, rows: number, positions: Float32Array): THREE.BufferGeometry {
   const uvs = new Float32Array(cols * rows * 2);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {

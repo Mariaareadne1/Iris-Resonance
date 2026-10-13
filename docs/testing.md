@@ -6,7 +6,7 @@ decoded media.
 
 ## Unit tests — Vitest (`npm test`)
 
-45 tests in `tests/unit/`, run in Node.
+48 tests in `tests/unit/`, run in Node.
 
 **Physics** (`physics.test.ts`, 11):
 - the rest pose is an equilibrium; a still sheet stays still
@@ -26,6 +26,9 @@ ascends; every note is in scale for every scale × root; out-of-range input
 clamps; every continuous control stays in its range (including NaN and ±∞);
 bend is monotonic and capped at 2 semitones; slow drags visit each region
 once; boundary jitter never retriggers; fast jumps land directly.
+
+**Render-mesh refinement** (`upsample.test.ts`, 3): exact at simulated
+vertices, linear fields reproduced exactly, grid-scale zig-zags not amplified.
 
 **Gestures** (`gesture.test.ts`, 10), with a recording sound double: a tap is
 exactly one in-scale note and no sustain; stronger taps are louder *and*
@@ -87,7 +90,7 @@ reading pixels back from the WebGL frame.
 
 ## Latest results (2026-10-12, Apple M2 Pro, macOS, Chromium headless on Metal)
 
-- `npm test`: **45 / 45 passed**
+- `npm test`: **48 / 48 passed**
 - `npm run test:e2e` (dev): **51 / 51 passed** (17 × Chromium, Firefox, WebKit)
 - `E2E_PROD=1 npm run test:e2e` (production bundle): **16 passed, 1 skipped**
   (the Chrome glide test imports source modules, which only the dev server

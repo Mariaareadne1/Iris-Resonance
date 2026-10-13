@@ -140,8 +140,10 @@ injected diffraction flakes), extended with:
 
 The backdrop is drawn in-scene (one full-screen triangle), so it appears in
 PNG exports and video recordings. Its glow follows pitch and membrane energy.
-The mesh uses a checkerboard triangulation so creases render cleanly in any
-direction.
+The render mesh is the 61×39 simulation grid refined 2× to 121×77
+(`rendering/upsample.ts`, Catmull-Rom midpoints: exact at simulated vertices,
+smooth in between). It uses a checkerboard triangulation, so creases render
+cleanly in any direction. Physics cost is unchanged.
 
 ## React and state
 

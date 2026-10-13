@@ -41,7 +41,7 @@ checked below with their evidence. The remaining items are a live deployment
 
 ## Tests executed (latest)
 
-- `npm test`: 45 / 45
+- `npm test`: 48 / 48
 - `npm run test:e2e`: 51 / 51 across Chromium, Firefox, WebKit (dev); `E2E_PROD=1` (Chromium): 16 passed + 1 dev-only skip
 - `npm run build`: passes
 - Recording decoded with ffmpeg: VP9 + Opus, audio peak −10.9 dBFS
@@ -59,10 +59,10 @@ checked below with their evidence. The remaining items are a live deployment
 - Mobile icon buttons lost accessible names → visually-hidden labels
 - Cross-browser: first touch silent in Firefox/Safari → notes schedule while the context starts; WebKit WebM recordings truncated → Safari records MP4
 - Default volume 0.8 → 0.7 for headroom on hard overlapping plucks
+- Ladder glints at extreme folds → render mesh refined 2× from the simulation grid (Catmull-Rom); physics cost unchanged, 60 fps
 
 ## Known issues / limitations
 
-- At extreme pulls, a few small ladder-shaped glints can still appear at the tightest fold (the mesh is 61×39). A denser mesh fixes it at a CPU cost.
 - node-web-audio-api mis-renders future-scheduled oscillator automation. Unit tests avoid it, and glides plus samples are verified in Chrome.
 - Tested in Firefox and Playwright WebKit, but not in the shipping Safari app, on iOS, or on real touch hardware.
 - Not deployed: the saved Vercel token is invalid (`vercel login` needed).
@@ -72,4 +72,4 @@ checked below with their evidence. The remaining items are a live deployment
 
 1. `npx vercel login && npx vercel --prod`, set `VITE_SITE_URL`, redeploy, and check the X card.
 2. A human listening pass on all three presets (docs/audio/*.m4a), then retune by ear.
-3. Optional: adaptive mesh density on fast GPUs; Safari recording check.
+3. Check recording in the shipping Safari app and on an iPhone.
